@@ -224,6 +224,10 @@ int main(int argc, char* argv[])
        {
 		 ssize_t bytes_received;
 		 char buffer[100];
+
+
+
+		 //there has a bug! i should use while instead of if, but when i use while, nothing can output in the newfile. and the bytes_received is 1!!!!!
 		 if ( bytes_received = recvfrom(fd, (void*)buffer,100, 0, (struct sockaddr*)&serv_addr, &slen)!= -1)
                  {
                  	 newfile.write(buffer, 13);
