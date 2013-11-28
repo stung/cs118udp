@@ -1,0 +1,81 @@
+Setting up the structs
+Creating socket...
+Socket creation complete, using socketfd: 3
+
+Binding socket
+Listening for incoming connections...
+Waiting for connections...
+Successfully accepted the connection, using the new socketfd: 4
+
+Waiting to receive data...
+342 Bytes received :
+GET /index.html HTTP/1.1
+Host: localhost:5554
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:7.0.1) Gecko/20100101 Firefox/7.0.1
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip, deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Connection: keep-alive
+
+
+Sending back a message...
+Stopping the server...
+
+Waiting for connections...
+Successfully accepted the connection, using the new socketfd: 4
+
+Waiting to receive data...
+341 Bytes received :
+GET /test.html HTTP/1.1
+Host: localhost:5554
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:7.0.1) Gecko/20100101 Firefox/7.0.1
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip, deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Connection: keep-alive
+
+
+Sending back a message...
+Stopping the server...
+
+Waiting for connections...
+Successfully accepted the connection, using the new socketfd: 4
+
+Waiting to receive data...
+349 Bytes received :
+GET /1.gif HTTP/1.1
+Host: localhost:5554
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:7.0.1) Gecko/20100101 Firefox/7.0.1
+Accept: image/png,image/*;q=0.8,*/*;q=0.5
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip, deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Connection: keep-alive
+Referer: http://localhost:5554/test.html
+
+
+Sending back a message...
+Stopping the server...
+
+Waiting for connections...
+Successfully accepted the connection, using the new socketfd: 4
+
+Waiting to receive data...
+349 Bytes received :
+GET /1.jpg HTTP/1.1
+Host: localhost:5554
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:7.0.1) Gecko/20100101 Firefox/7.0.1
+Accept: image/png,image/*;q=0.8,*/*;q=0.5
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip, deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Connection: keep-alive
+Referer: http://localhost:5554/test.html
+
+
+Sending back a message...
+Stopping the server...
+
+Waiting for connections...

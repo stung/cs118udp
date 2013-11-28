@@ -121,16 +121,17 @@ int main(int argc, char* argv[])
 		ssize_t bytes_received;
 		char buffer[100];
 
-		//there has a bug! i should use while instead of if, but 
-		// when i use while, nothing can output in the newfile. 
-		// and the bytes_received is 1!!!!!
-		bytes_received = recvfrom(fd, (void*)buffer,100, 0,
-			 (struct sockaddr*)&serv_addr, &slen);
-		if ( bytes_received != -1) {
-     		newfile.write(buffer, bytes_received);
-			cout << bytes_received << endl;
-			cout << "writing data" << endl;
-			cout << buffer << endl;
+		int i=0;
+		while(i!=24){
+			bytes_received = recvfrom(fd, (void*)&Packet,packetSize, 0,
+				 (struct sockaddr*)&serv_addr, &slen);
+			if ( bytes_received != -1) {
+     			newfile.write(Packet.payload, bytes_received-headSize);
+				cout << "writing data" << endl;
+				cout << "writing "<<bytes_received-headSize<<" bytes into file"<<endl;
+
+				i++;
+			}
 		}
     } 
 	newfile.close();	
