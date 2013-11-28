@@ -19,11 +19,6 @@ void paddr(unsigned char a[])
 	// printf("%d.%d.%d.%d\n", a[0], a[1], a[2], a[3]);
 }
 
-void err(char *str)
-{
-    cerr << str << endl;
-}
-
 int main(int argc, char* argv[])
 {
 	if (argc < 4) {
@@ -117,7 +112,7 @@ int main(int argc, char* argv[])
  	strcpy(Packet.payload, filename);
 	if (sendto(fd, (void*)&Packet, strlen(filename)+headSize, 0, 
 		  (struct sockaddr*)&serv_addr, slen)==-1)
-        err("sendto()");
+        cerr << "sendto()" << endl;
 	
 	cout<<"creating file"<<endl;
 	string filename1="3.txt";
@@ -129,8 +124,9 @@ int main(int argc, char* argv[])
 		//there has a bug! i should use while instead of if, but 
 		// when i use while, nothing can output in the newfile. 
 		// and the bytes_received is 1!!!!!
-		if ( bytes_received = recvfrom(fd, (void*)buffer,100, 0,
-			 (struct sockaddr*)&serv_addr, &slen)!= -1) {
+		bytes_received = recvfrom(fd, (void*)buffer,100, 0,
+			 (struct sockaddr*)&serv_addr, &slen);
+		if ( bytes_received != -1) {
      		newfile.write(buffer, 13);
 			cout << bytes_received << endl;
 			cout << "writing data" << endl;

@@ -10,11 +10,6 @@
 #define BUFLEN 512
 using namespace std;
 
-void err(char *str)
-{
-    cerr << str << endl;
-}
-
 int main(int argc, char* argv[])
 {
 	if (argc < 2) {
@@ -64,24 +59,25 @@ int main(int argc, char* argv[])
     {
     	cout << "Waiting for data..." << endl;
 		ssize_t bytes_received;
-        if (bytes_received =recvfrom(fd, (void*)&Packet,packetSize, 
-        			0, (struct sockaddr*)&cli_addr, &slen)==-1)
-            err("recvfrom()");
+		bytes_received = recvfrom(fd, (void*)&Packet,packetSize, 
+        					0, (struct sockaddr*)&cli_addr, &slen);
+        if (bytes_received == -1)
+            cerr << "recvfrom()" << endl;
 	
 		cout << "Received packet from: " << 
-			inet_ntoa(cli_addr.sin_addr)<<" : ";
-		cout<< ntohs(cli_addr.sin_port)<<endl;
-		cout << "Data: " << Packet.payload<<endl;
+			inet_ntoa(cli_addr.sin_addr) <<" : ";
+		cout << ntohs(cli_addr.sin_port) << endl;
+		cout << "Data: " << Packet.payload << endl;
 
 		//readFile
-		cout<<"reading file"<<endl;
+		cout << "reading file" << endl;
 		//Packet.payload[bytes_received] = '\0';	
 		char buffer[100];
 		int count = 0;
 
 		//get filename;
 		string filename(Packet.payload);
-		cout<<filename<<endl;
+		cout << filename << endl;
 		//read the file from the sender path
 		ifstream fin(filename.c_str(),ios::binary);
 			
