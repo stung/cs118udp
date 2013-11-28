@@ -64,10 +64,12 @@ int main(int argc, char* argv[])
     {
     	cout << "Waiting for data..." << endl;
 		ssize_t bytes_received;
-        if (bytes_received =recvfrom(fd, (void*)&Packet,packetSize, 0, (struct sockaddr*)&cli_addr, &slen)==-1)
+        if (bytes_received =recvfrom(fd, (void*)&Packet,packetSize, 
+        			0, (struct sockaddr*)&cli_addr, &slen)==-1)
             err("recvfrom()");
 	
-		cout << "Received packet from: " << inet_ntoa(cli_addr.sin_addr)<<" : ";
+		cout << "Received packet from: " << 
+			inet_ntoa(cli_addr.sin_addr)<<" : ";
 		cout<< ntohs(cli_addr.sin_port)<<endl;
 		cout << "Data: " << Packet.payload<<endl;
 
@@ -87,7 +89,8 @@ int main(int argc, char* argv[])
 		if(!fin) {
 			char err_msg [] ="the file you request does not exist";
 			//write(fd, err_msg, strlen(err_msg));
-			sendto(fd, err_msg, strlen(err_msg), 0, (struct sockaddr*)&cli_addr, slen);
+			sendto(fd, err_msg, strlen(err_msg), 0,
+			   (struct sockaddr*)&cli_addr, slen);
 			cout<<"File open error!\n";
 			//send(NAK);
 		}
@@ -111,7 +114,8 @@ int main(int argc, char* argv[])
 			count = fin.gcount();
 			//use write method to send the http response--the content
 			//write(sockfd, buffer, count);
-			sendto(fd, buffer, count, 0, (struct sockaddr*)&cli_addr, slen);
+			sendto(fd, buffer, count, 0,
+			  (struct sockaddr*)&cli_addr, slen);
 			cout<<"sending data amount:"<<count<<endl;
 		}
 	
