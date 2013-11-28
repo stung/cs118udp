@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 	* once receive file data from server, write it into a file
 	* send ack and nak
 	*/
-	char* filename=argv[3];
+	char* filename = argv[3];
  	strcpy(Packet.payload, filename);
 	if (sendto(fd, (void*)&Packet, strlen(filename)+headSize, 0, 
 		  (struct sockaddr*)&serv_addr, slen)==-1)
@@ -127,12 +127,12 @@ int main(int argc, char* argv[])
 		bytes_received = recvfrom(fd, (void*)buffer,100, 0,
 			 (struct sockaddr*)&serv_addr, &slen);
 		if ( bytes_received != -1) {
-     		newfile.write(buffer, 13);
+     		newfile.write(buffer, bytes_received);
 			cout << bytes_received << endl;
 			cout << "writing data" << endl;
 			cout << buffer << endl;
 		}
-    }                                         
+    } 
 	newfile.close();	
 
 	cout << "Closing socket..." << endl;
