@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "packet.h"
+#define BUFLEN 512
 using namespace std;
 
 // prints the IP address in dotted decimal
@@ -16,6 +17,11 @@ void paddr(unsigned char a[])
 	cout << (int)a[0] << "." << (int)a[1] << "." <<
 			(int)a[2] << "." << (int)a[3] << endl;
 	// printf("%d.%d.%d.%d\n", a[0], a[1], a[2], a[3]);
+}
+
+void err(char *str)
+{
+    cerr << str << endl;
 }
 
 int main(int argc, char* argv[])
@@ -29,7 +35,10 @@ int main(int argc, char* argv[])
 	}
 
 	// the socket addr container
-	struct sockaddr_in myaddr;
+	//struct sockaddr_in myaddr;
+    struct sockaddr_in serv_addr;
+    int i, slen=sizeof(serv_addr);
+    char buf[BUFLEN];
 
 	// the host entity container
 	struct hostent *hp;
@@ -53,11 +62,11 @@ int main(int argc, char* argv[])
 	htonl converts long to network rep (address)
 	htons converts short to network rep (port #)
 	*/
-	memset((char *)&myaddr, 0, sizeof(myaddr));
-	myaddr.sin_family = AF_INET;
-	myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	myaddr.sin_port = htonl(0);
+	memset((char *)&serv_addr, 0, sizeof(serv_addr));
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_port = htons(5530);
 
+	/*
 	if (bind(fd, (struct sockaddr *)&myaddr, 
 			sizeof(myaddr)) < 0) {
 		cerr << "Failed to bind to " << "portnum" << endl;
@@ -66,7 +75,8 @@ int main(int argc, char* argv[])
 		cout << "Socket bound to port " << "portnum" << "!"
 			 << endl;
 	}
-	
+	*/
+
 	// cout << "IP address assigned: " << 
 
 	cout << "Locating " << host << "..." << endl;
@@ -79,9 +89,18 @@ int main(int argc, char* argv[])
 		cout << "Hostname resolved to: ";
 		paddr((unsigned char*) hp -> h_addr_list[i]);
 	}
+    char * ipaddr = (char*) hp -> h_addr_list[0];
+    cout << ipaddr << endl;
+
+    if (inet_aton("127.0.0.1", &serv_addr.sin_addr)==0)
+    {
+        fprintf(stderr, "inet_aton() failed\n");
+        exit(1);
+    }
+
 
 	//Waiting to receive data...
-	cout << "Waiting to receive data..."  << endl;
+	// cout << "Waiting to receive data..."  << endl;
 
 	/*send file request
 	* the first packet is only include file name and header info
@@ -89,19 +108,17 @@ int main(int argc, char* argv[])
 	* send ack and nak
 	*/
 
-	//packet.payload= argv[3];
-	char* filename=argv[3];
- 	strcpy(Packet.payload, filename);
-	if(write(fd,(void*)&Packet,strlen(filename) + headSize)!=-1){
-		/*if (recv()==nck)
-		{
-			//retransmit
-		}
-		else
-		{
-			
-		} */
-	}
+    while(1)
+    {
+        printf("\nEnter data to send(Type exit and press enter to exit) : ");
+        scanf("%[^\n]",buf);
+        getchar();
+        if(strcmp(buf,"exit") == 0)
+          exit(0);
+ 
+        if (sendto(fd, buf, BUFLEN, 0, (struct sockaddr*)&serv_addr, slen)==-1)
+            err("sendto()");
+    }
 
 
 
