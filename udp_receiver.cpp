@@ -7,6 +7,7 @@
 #include <string>
 #include <stdlib.h>
 #include <stdio.h>
+#include <packet.h>
 using namespace std;
 
 // prints the IP address in dotted decimal
@@ -78,6 +79,34 @@ int main(int argc, char* argv[])
 		cout << "Hostname resolved to: ";
 		paddr((unsigned char*) hp -> h_addr_list[i]);
 	}
+
+	//Waiting to receive data...
+	cout << "Waiting to receive data..."  << endl;
+
+	/*send file request
+	* the first packet is only include file name and header info
+	* once receive file data from server, write it into a file
+	* send ack and nak
+	*/
+
+	//packet.payload= argv[3];
+	char* filename=argv[3];
+ 	strcpy(packet.payload, filename);
+	if(write(fd,(void*)&packet,strlen(filename)+headerSize)!=-1){
+		if (recv()==nck)
+		{
+			//retransmit
+		}
+		else
+		{
+			
+		}
+	}
+
+
+
+
+
 
 	cout << "Closing socket..." << endl;
 	close(fd);

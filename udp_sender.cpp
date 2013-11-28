@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <stdlib.h>
+#include <packet.h>
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -76,19 +77,20 @@ int main(int argc, char* argv[])
 			cout<<"Successfully accepted the connection, using the new socketfd: "<<new_socketfd<<"\r\n"<<endl;
 		}
 
+
+
 		//Waiting to receive data...
-		cout << "Waiting to receive data..."  << std::endl;
+		cout << "Waiting to receive data..."  << endl;
 
 		/*
 		*receive the first packet(request filename) from client- send ACK/NCK 
 		*send packets
 		*/
 		ssize_t bytes_received;
-		char incomming_data_buffer[packetSize];
 		if (bytes_received = recv(new_socketfd, (void*)&packet,packetSize, 0);
 !=-1)
 		{
-			send(ACK);
+			
 
 			packet.payload[bytes_received] = '\0';
 
@@ -96,23 +98,64 @@ int main(int argc, char* argv[])
 			string filename(pakcket.payload);
 
 			//read the file from the sender path
-			//caculate the fliesize
+			ifstream fin(filename.c_str(),ios::binary);
+			
+			//file is not exist
+			if(!fin){
+				char err_msg [] ="the file you request does not exist";
+				write(sockfd, err_msg, strlen(err_msg));
+				cout<<"File open error!\n";
+				//send(NAK);
+			}
+
+			/************ start to caculate the fliesize*********/
+			streampos size, beg;
+			int fsize;
+			ifstream fin1(filename.c_str(),ios::binary);
+
+  			// uses a buffer to assess the file size
+			beg = fin1.tellg();
+			fin1.seekg(0, std::ios::end);
+			size = fin1.tellg() - beg;
+			fsize=size;
+			fin1.seekg(beg); // resets the stream pointer to the beginning
+			
+			/************ finish to caculate the fliesize*********/
+			
+			/*send(ACK); Tell the client that server successful find the file 
+			* and the filename is right
+			*/
+
 			//decide how much pkts needed
+			packetNum=fsize/DATASIZE;
+			if (fsize%DATASIZE!=0)
+			{
+				packetNum+=1;
+			}
+
+
 			//send the file from the server
+			int count = 0;
+			for (int i = 0; i < packetNum; ++i)
+			{
+				fin.read(pakcket.payload,DATASIZE);
+				count=fin.gcount();
+				//add #seq & checksum;
+				pakcket.seq=i;
+				pakcket.checksum=i^2;
+				//send packet
+				write(new_socketfd, (void*)&packet,count+headerSize);
+
+			}
+
+			fin.close();
+			fin1.close();
 
 		}
 		else
 		{
-			send(NCK);
+			//send(NCK);
 		}
-
-
-
-
-
-
-
-
 
 
 		//Stopping the server...
@@ -126,5 +169,5 @@ int main(int argc, char* argv[])
 	cout << "Closing socket..." << endl;
 	close(fd);
 	
-	// testtest!!!
+	// testtest
 }
