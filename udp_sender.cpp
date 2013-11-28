@@ -6,7 +6,7 @@
 #include <fstream>
 #include <string>
 #include <stdlib.h>
-#include <packet.h>
+#include "packet.h"
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 	//Listening for incoming connections...
 	cout<<"Listening for incoming connections..."<<endl;
 
-	status=listen(socketfd,5);
+	int status=listen(fd,5);
 	if(status==-1) cout<<"Listen error"<<endl;
 
 	while(true)
@@ -86,16 +86,15 @@ int main(int argc, char* argv[])
 		*receive the first packet(request filename) from client- send ACK/NCK 
 		*send packets
 		*/
-		ssize_t bytes_received;
-		if (bytes_received = recv(new_socketfd, (void*)&packet,packetSize, 0);
-!=-1)
+		ssize_t bytes_received = recv(new_socketfd, (void*)&Packet,packetSize, 0);
+		if (bytes_received != -1)
 		{
 			
 
-			packet.payload[bytes_received] = '\0';
+			Packet.payload[bytes_received] = '\0';
 
 			//get filename;
-			string filename(pakcket.payload);
+			string filename(Packet.payload);
 
 			//read the file from the sender path
 			ifstream fin(filename.c_str(),ios::binary);
@@ -103,7 +102,7 @@ int main(int argc, char* argv[])
 			//file is not exist
 			if(!fin){
 				char err_msg [] ="the file you request does not exist";
-				write(sockfd, err_msg, strlen(err_msg));
+				write(fd, err_msg, strlen(err_msg));
 				cout<<"File open error!\n";
 				//send(NAK);
 			}
@@ -127,10 +126,10 @@ int main(int argc, char* argv[])
 			*/
 
 			//decide how much pkts needed
-			packetNum=fsize/DATASIZE;
-			if (fsize%DATASIZE!=0)
+			int packetNum = fsize / DATASIZE;
+			if (fsize % DATASIZE!=0)
 			{
-				packetNum+=1;
+				packetNum += 1;
 			}
 
 
@@ -138,13 +137,13 @@ int main(int argc, char* argv[])
 			int count = 0;
 			for (int i = 0; i < packetNum; ++i)
 			{
-				fin.read(pakcket.payload,DATASIZE);
-				count=fin.gcount();
+				fin.read(Packet.payload,DATASIZE);
+				count = fin.gcount();
 				//add #seq & checksum;
-				pakcket.seq=i;
-				pakcket.checksum=i^2;
+				Packet.seq=i;
+				Packet.checksum=i^2;
 				//send packet
-				write(new_socketfd, (void*)&packet,count+headerSize);
+				write(new_socketfd, (void*)&Packet,count + headSize);
 
 			}
 

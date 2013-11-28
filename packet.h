@@ -14,16 +14,16 @@
 #include <utility>
 #include <signal.h>
 
-const int DATASIZE= 1024;
+const int DATASIZE = 1024;
 
 enum PACKET_TYPE {
-	NONE=0,
+	NONE = 0,
 	FILE_TRANSFER_REQUEST,
 	FILE_DATA,
 	ACK,
 	FILE_NOTEXIST_ERROR,
 	ERROR,
-	FILR_TRANSFER_COMPLETE,
+	FILE_TRANSFER_COMPLETE
 };
 
 struct PACKET{
@@ -37,9 +37,9 @@ struct PACKET{
 	//struct sockaddr_in dest_addr;
 	//long dest_portNum;
 
-	PACKET():type(NONE), seq(0),checksum(0){}
+	PACKET() : type(NONE), seq(0), checksum(0), ackNum(0){}
 };
 
-const int headSize=sizeof(PACKET_TYPE)+2*sizeof(int);
-const int packetSize=headSize+DATASIZE;
+const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 3;
+const int packetSize = headSize + DATASIZE;
 PACKET Packet;

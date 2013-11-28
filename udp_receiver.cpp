@@ -7,7 +7,7 @@
 #include <string>
 #include <stdlib.h>
 #include <stdio.h>
-#include <packet.h>
+#include "packet.h"
 using namespace std;
 
 // prints the IP address in dotted decimal
@@ -91,16 +91,16 @@ int main(int argc, char* argv[])
 
 	//packet.payload= argv[3];
 	char* filename=argv[3];
- 	strcpy(packet.payload, filename);
-	if(write(fd,(void*)&packet,strlen(filename)+headerSize)!=-1){
-		if (recv()==nck)
+ 	strcpy(Packet.payload, filename);
+	if(write(fd,(void*)&Packet,strlen(filename) + headSize)!=-1){
+		/*if (recv()==nck)
 		{
 			//retransmit
 		}
 		else
 		{
 			
-		}
+		} */
 	}
 
 
