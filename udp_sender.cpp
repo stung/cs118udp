@@ -116,7 +116,8 @@ int main(int argc, char* argv[])
 			cout<<"sending data amount:"<<count<<endl;
 			i++;
 		}
-	
+		
+		cout<<"server send "<<i<<"packets to client"<<endl;	
 	
 		fin.close();
 		fin1.close();

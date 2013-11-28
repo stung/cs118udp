@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 		char buffer[100];
 
 		int i=0;
-		while(i!=24){
+		while(i!=3){
 			bytes_received = recvfrom(fd, (void*)&Packet,packetSize, 0,
 				 (struct sockaddr*)&serv_addr, &slen);
 			if ( bytes_received != -1) {
