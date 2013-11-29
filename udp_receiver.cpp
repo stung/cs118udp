@@ -97,7 +97,6 @@ int main(int argc, char* argv[])
 
 	char* filename = argv[3];
  	strncpy(Packet.payload, filename, sizeof(Packet.payload));
-<<<<<<< HEAD
 	Packet.type = FILE_TRANSFER_REQUEST;
 	ssize_t bytes_received;
 	int exp_pktNum=0;
@@ -116,32 +115,6 @@ int main(int argc, char* argv[])
 			{
 				cerr << Packet.payload << endl;
 				return 0;
-=======
-	
-	if (sendto(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
-		  (struct sockaddr*)&serv_addr, slen) == -1)
-        cerr << "sendto() failed" << endl;
-	
-	cout << "creating file" << endl;
-	string received_file = filename;
-	ofstream newfile(received_file.c_str());
-	if (newfile.is_open()) {
-		ssize_t bytes_received;
-		char buffer[100];
-
-		int i = 0;
-		while(i != 1){
-			bytes_received = recvfrom(fd, (void*)&Packet,
-				 packetSize, 0, (struct sockaddr*)&serv_addr,
-				 &slen);
-			if (bytes_received != -1) {
-     			newfile.write(Packet.payload, 
-     				bytes_received - headSize);
-				cout << "writing data" << endl;
-				cout << "writing " << bytes_received - headSize
-					<< " bytes into file" << endl;
-				i++;
->>>>>>> 6c2bb81406fd013df107d3c9ad3cc216bcde1866
 			}
 			else
 			{

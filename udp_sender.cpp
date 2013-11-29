@@ -82,10 +82,9 @@ int main(int argc, char* argv[])
 					char err_msg [] = "the file you request does not exist";
 					strncpy(Packet.payload, err_msg, strlen(err_msg));
 					if(sendto(fd, (void*)&Packet, strlen(err_msg) + headSize, 0,
-			 		 	(struct sockaddr*)&cli_addr, slen)=!)
+			 		 	(struct sockaddr*)&cli_addr, slen) != -1)
 						cout << "File open error!" << endl;
-				}
-				else{
+				} else {
 					cout << "Reading file" << endl;
 					/************ start to caculate the fliesize*********/
 					streampos size, beg;
@@ -115,16 +114,7 @@ int main(int argc, char* argv[])
 						{
 							Packet.type = FILE_DATA;
 
-
-
 						}
-
-
-
-
-
-
-
 
 					}
 					//file transfer complete
@@ -138,7 +128,7 @@ int main(int argc, char* argv[])
 							
 						//check ack
 						bytes_received = recvfrom(fd, (void*)&Packet,
-				 			packetSize, 0, (struct sockaddr*)&serv_addr,
+				 			packetSize, 0, (struct sockaddr*)&server_addr,
 							&slen);
 						if (bytes_received != -1){
 							//file transfer complete
@@ -147,9 +137,9 @@ int main(int argc, char* argv[])
 								cout << "The file transfer is completed!" << endl;
 								break;
 							}
-					}
+						}
+					}	
 					
-
 
 					fin.close();
 					fin1.close();
@@ -157,8 +147,7 @@ int main(int argc, char* argv[])
 				}
 
 			}
-        }
-        else{
+        } else{
         	cerr << "recvfrom() failed" << endl;
         }
     }
