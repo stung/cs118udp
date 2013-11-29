@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 		fin1.seekg(0, std::ios::end);
 		size = fin1.tellg() - beg;
 		fsize=size;
-		fin1.seekg(beg); // resets the stream pointer to the beginning
+		fin1.seekg(beg); // resets stream pointer to the beginning
 		/************ finish to caculate the fliesize*********/
 	
 		int i=0;
@@ -109,8 +109,6 @@ int main(int argc, char* argv[])
 		{
 			fin.read(Packet.payload,DATASIZE);
 			count = fin.gcount();
-			//use write method to send the http response--the content
-			//write(sockfd, buffer, count);
 			sendto(fd, (void*)&Packet, count+headSize, 0,
 			  (struct sockaddr*)&cli_addr, slen);
 			cout<<"sending data amount:"<<count<<endl;

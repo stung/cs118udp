@@ -87,21 +87,6 @@ int main(int argc, char* argv[])
   	  fprintf(stderr, "inet_aton() failed\n");
   	  exit(1);
   	}
-
-   	//while(1)
-   	//{
-  	 	/*
-		printf("\nEnter data to send(Type exit and press enter to exit) : ");
-     	   	scanf("%[^\n]",buf);
-        	getchar();
-     	  	if(strcmp(buf,"exit") == 0)
-          	exit(0);
-
-        	if (sendto(fd, buf, BUFLEN, 0,
-        	 (struct sockaddr*)&serv_addr, slen)==-1)
-            	err("sendto()");
-		*/
-	//}
 	
 	/*send file request
 	* the first packet is only include file name and header info
@@ -123,12 +108,14 @@ int main(int argc, char* argv[])
 
 		int i=0;
 		while(i!=3){
-			bytes_received = recvfrom(fd, (void*)&Packet,packetSize, 0,
-				 (struct sockaddr*)&serv_addr, &slen);
+			bytes_received = recvfrom(fd, (void*)&Packet,packetSize,
+				 0, (struct sockaddr*)&serv_addr, &slen);
 			if ( bytes_received != -1) {
-     			newfile.write(Packet.payload, bytes_received-headSize);
+     			newfile.write(Packet.payload, 
+     				bytes_received - headSize);
 				cout << "writing data" << endl;
-				cout << "writing "<<bytes_received-headSize<<" bytes into file"<<endl;
+				cout << "writing " << bytes_received - headSize
+					<< " bytes into file" << endl;
 
 				i++;
 			}
