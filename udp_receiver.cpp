@@ -82,10 +82,11 @@ int main(int argc, char* argv[])
 	//assign the serv_addr from the argv[1]
    	addr_list = (struct in_addr **)hp->h_addr_list;
 
-	if (inet_aton(inet_ntoa(*addr_list[0]), &serv_addr.sin_addr)==0)
+	if (inet_aton(inet_ntoa(*addr_list[0]), &serv_addr.sin_addr)
+			 == 0)
 	{
-  	  fprintf(stderr, "inet_aton() failed\n");
-  	  exit(1);
+  	  cerr << "inet_aton() failed" << endl;
+  	  return 0;
   	}
 	
 	/*send file request
@@ -94,29 +95,30 @@ int main(int argc, char* argv[])
 	* send ack and nak
 	*/
 	char* filename = argv[3];
- 	strcpy(Packet.payload, filename);
-	if (sendto(fd, (void*)&Packet, strlen(filename)+headSize, 0, 
-		  (struct sockaddr*)&serv_addr, slen)==-1)
+ 	strncpy(Packet.payload, filename, sizeof(Packet.payload));
+	
+	if (sendto(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
+		  (struct sockaddr*)&serv_addr, slen) == -1)
         cerr << "sendto()" << endl;
 	
-	cout<<"creating file"<<endl;
-	string filename1="3.txt";
-	ofstream newfile(filename1.c_str());
+	cout << "creating file" << endl;
+	string received_file = filename;
+	ofstream newfile(received_file.c_str());
 	if (newfile.is_open()) {
 		ssize_t bytes_received;
 		char buffer[100];
 
-		int i=0;
-		while(i!=3){
-			bytes_received = recvfrom(fd, (void*)&Packet,packetSize,
-				 0, (struct sockaddr*)&serv_addr, &slen);
+		int i = 0;
+		while(i != 1){
+			bytes_received = recvfrom(fd, (void*)&Packet,
+				 packetSize, 0, (struct sockaddr*)&serv_addr,
+				 &slen);
 			if ( bytes_received != -1) {
      			newfile.write(Packet.payload, 
      				bytes_received - headSize);
 				cout << "writing data" << endl;
 				cout << "writing " << bytes_received - headSize
 					<< " bytes into file" << endl;
-
 				i++;
 			}
 		}

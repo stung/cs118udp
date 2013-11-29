@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 			//write(fd, err_msg, strlen(err_msg));
 			sendto(fd, err_msg, strlen(err_msg), 0,
 			   (struct sockaddr*)&cli_addr, slen);
-			cout<<"File open error!\n";
+			cout << "File open error!\n";
 			//send(NAK);
 		}
 
@@ -109,13 +109,13 @@ int main(int argc, char* argv[])
 		{
 			fin.read(Packet.payload,DATASIZE);
 			count = fin.gcount();
-			sendto(fd, (void*)&Packet, count+headSize, 0,
+			sendto(fd, (void*)&Packet, count + headSize, 0,
 			  (struct sockaddr*)&cli_addr, slen);
-			cout<<"sending data amount:"<<count<<endl;
+			cout << "sending data amount:" << count << endl;
 			i++;
 		}
 		
-		cout<<"server send "<<i<<"packets to client"<<endl;	
+		cout << "server send " << i << " packets to client" << endl;	
 	
 		fin.close();
 		fin1.close();
