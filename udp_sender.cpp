@@ -65,7 +65,6 @@ int main(int argc, char* argv[])
         {
 			if (Packet.type == FILE_TRANSFER_REQUEST)
 			{
-
 				string filename(Packet.payload);
 				int count = 0;
 				cout << "Receiving " << filename << " request from: " << 
@@ -75,7 +74,7 @@ int main(int argc, char* argv[])
 				//read the file from the sender path
 				ifstream fin(filename.c_str(),ios::binary);
 
-				//file is not exist
+				//file does not exist
 				if(!fin) {
 					
 					Packet.type = FILE_NOTEXIST_ERROR;
@@ -89,14 +88,14 @@ int main(int argc, char* argv[])
 					/************ start to caculate the fliesize*********/
 					streampos size, beg;
 					int fsize;
-					ifstream fin1(filename.c_str(),ios::binary);
+					ifstream fin_sizepos(filename.c_str(),ios::binary);
 
 	  				// uses a buffer to assess the file size
-					beg = fin1.tellg();
-					fin1.seekg(0, std::ios::end);
-					size = fin1.tellg() - beg;
+					beg = fin_sizepos.tellg();
+					fin_sizepos.seekg(0, std::ios::end);
+					size = fin_sizepos.tellg() - beg;
 					fsize = size;
-					fin1.seekg(beg); // resets stream pointer to the beginning
+					fin_sizepos.seekg(beg); // resets stream pointer to beginning
 					/************ finish to caculate the fliesize*********/
 
 					// determine the number of packets to be sent
@@ -107,21 +106,19 @@ int main(int argc, char* argv[])
 					//file transfer
 					int CWnd = 1500; //specify the CWnd is 1500B
 					int count = 0;   
-					while(1){
+					while(1) {
 						count=CWnd;
-
 						while(count)
 						{
 							Packet.type = FILE_DATA;
-
 						}
 
 					}
 					//file transfer complete
-					while(1){
+					while(1) {
 
 						Packet.type = FILE_TRANSFER_COMPLETE;
-						char msg [] = "The file transfer is completed";
+						char msg [] = "The file transfer is complete";
 						strncpy(Packet.payload, msg, strlen(msg));
 						if(sendto(fd, (void*)&Packet, strlen(msg) + headSize, 0,
 			 		 		(struct sockaddr*)&cli_addr, slen) != -1 )
@@ -134,18 +131,14 @@ int main(int argc, char* argv[])
 							//file transfer complete
 							if (Packet.type == ACK && Packet.ackNum == -2)
 							{
-								cout << "The file transfer is completed!" << endl;
+								cout << "The file transfer is complete!" << endl;
 								break;
 							}
 						}
 					}	
-					
-
 					fin.close();
-					fin1.close();
-
+					fin_sizepos.close();
 				}
-
 			}
         } else{
         	cerr << "recvfrom() failed" << endl;

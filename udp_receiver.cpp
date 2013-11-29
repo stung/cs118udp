@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 								Packet.type = ACK;
 								//specify the ackNum is -2 to inform the sender
 								Packet.ackNum = -2;
-                                if ( sendto(fd,(void*)&Packet,headSize,0, 
+                                if ( sendto(fd,(void*)&Packet, headSize, 0, 
 		  								(struct sockaddr*)&serv_addr, slen) != -1 )
                                 {
                                     cout << "sending ACK" << Packet.ackNum << endl;
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
 							}
 							else if (Packet.type == FILE_DATA){
 								//get the expected pkt
-								if(exp_pktNum==Packet.seqNum){
+								if(exp_pktNum == Packet.seqNum){
 									//writing data
 									newfile.write(Packet.payload, 
      								bytes_received - headSize);
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
 
 								//send ACK 
 								Packet.type = ACK;
-                                if ( sendto(fd,(void*)&Packet,headSize,0, 
+                                if (sendto(fd, (void*)&Packet, headSize, 0, 
 		  								(struct sockaddr*)&serv_addr, slen) != -1 )
                                 {
                                     cout << "sending ACK" << Packet.ackNum << endl;
