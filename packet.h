@@ -22,22 +22,17 @@ enum PACKET_TYPE {
 	FILE_DATA,
 	ACK,
 	FILE_NOTEXIST_ERROR,
-	ERROR,
+	FILE_CORRUPTION,
 	FILE_TRANSFER_COMPLETE
 };
 
 struct PACKET{
 
 	PACKET_TYPE type;
-	int seq;
-	int checksum;
+	int seqNum;
 	int ackNum;
-	char payload[DATASIZE] ;
-	//struct sockaddr_in src_addr;
-	//struct sockaddr_in dest_addr;
-	//long dest_portNum;
-
-	PACKET() : type(NONE), seq(0), checksum(0), ackNum(0){}
+	char payload[DATASIZE] ; 
+	PACKET() : type(NONE), seqNum(0), ackNum(-1){}
 };
 
 const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 3;
