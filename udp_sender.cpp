@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 
 	// the socket addr container
 	struct sockaddr_in server_addr, cli_addr;
-   	socklen_t slen=sizeof(cli_addr);
+   	socklen_t slen = sizeof(cli_addr);
 
 	cout << "Creating socket..." << endl;
 
@@ -59,13 +59,13 @@ int main(int argc, char* argv[])
     {
     	cout << "Waiting for data..." << endl;
 		ssize_t bytes_received;
-		bytes_received = recvfrom(fd, (void*)&Packet,packetSize, 
-        					0, (struct sockaddr*)&cli_addr, &slen);
+		bytes_received = recvfrom(fd, (void*)&Packet, packetSize, 
+        				  0, (struct sockaddr*)&cli_addr, &slen);
         if (bytes_received == -1)
-            cerr << "recvfrom()" << endl;
+            cerr << "recvfrom() failed" << endl;
 	
 		cout << "Received packet from: " << 
-			inet_ntoa(cli_addr.sin_addr) <<" : ";
+			inet_ntoa(cli_addr.sin_addr) <<":";
 		cout << ntohs(cli_addr.sin_port) << endl;
 		cout << "Data: " << Packet.payload << endl;
 
@@ -83,11 +83,11 @@ int main(int argc, char* argv[])
 			
 		//file is not exist
 		if(!fin) {
-			char err_msg [] ="the file you request does not exist";
+			char err_msg [] = "the file you request does not exist";
 			//write(fd, err_msg, strlen(err_msg));
 			sendto(fd, err_msg, strlen(err_msg), 0,
 			   (struct sockaddr*)&cli_addr, slen);
-			cout << "File open error!\n";
+			cout << "File open error!" << endl;
 			//send(NAK);
 		}
 
@@ -100,19 +100,23 @@ int main(int argc, char* argv[])
 		beg = fin1.tellg();
 		fin1.seekg(0, std::ios::end);
 		size = fin1.tellg() - beg;
-		fsize=size;
+		fsize = size;
 		fin1.seekg(beg); // resets stream pointer to the beginning
 		/************ finish to caculate the fliesize*********/
+
+		// determine the number of packets to be sent
+		int numPackets = fsize / DATASIZE;
+		if (fsize % DATASIZE != 0)
+			numPackets++;
 	
-		int i=0;
-		while(!fin.eof())
+		int i = 0;
+		for(; i < numPackets; ++i)
 		{
-			fin.read(Packet.payload,DATASIZE);
+			fin.read(Packet.payload, DATASIZE);
 			count = fin.gcount();
 			sendto(fd, (void*)&Packet, count + headSize, 0,
 			  (struct sockaddr*)&cli_addr, slen);
-			cout << "sending data amount:" << count << endl;
-			i++;
+			cout << "sending data amount: " << count << endl;
 		}
 		
 		cout << "server send " << i << " packets to client" << endl;	

@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 	//struct sockaddr_in myaddr;
 	struct sockaddr_in serv_addr;
 	int i;
-	socklen_t slen=sizeof(serv_addr);
+	socklen_t slen = sizeof(serv_addr);
 	char buf[BUFLEN];
 
 	// the host entity container
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 	
 	if (sendto(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
 		  (struct sockaddr*)&serv_addr, slen) == -1)
-        cerr << "sendto()" << endl;
+        cerr << "sendto() failed" << endl;
 	
 	cout << "creating file" << endl;
 	string received_file = filename;
@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 			bytes_received = recvfrom(fd, (void*)&Packet,
 				 packetSize, 0, (struct sockaddr*)&serv_addr,
 				 &slen);
-			if ( bytes_received != -1) {
+			if (bytes_received != -1) {
      			newfile.write(Packet.payload, 
      				bytes_received - headSize);
 				cout << "writing data" << endl;
