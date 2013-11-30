@@ -77,14 +77,21 @@ int main(int argc, char* argv[])
 
 				//file does not exist
 				if(!fin) {
-					
 					Packet.type = FILE_NOTEXIST_ERROR;
-					char err_msg [] = "the file you request does not exist";
+					char err_msg [] = "the file you requested does not exist";
+					memset(&Packet.payload, 0, sizeof(Packet.payload));
 					strncpy(Packet.payload, err_msg, strlen(err_msg));
 					if(sendto(fd, (void*)&Packet, strlen(err_msg) + headSize, 0,
 			 		 	(struct sockaddr*)&cli_addr, slen) != -1)
 						cout << "File open error!" << endl;
 				} else {
+					Packet.type = FILE_EXISTS;
+					char begin_msg [] = "begin to read from file";
+					memset(&Packet.payload, 0, sizeof(Packet.payload));
+					strncpy(Packet.payload, begin_msg, strlen(begin_msg));
+					if(sendto(fd, (void*)&Packet, strlen(begin_msg) + headSize, 0,
+			 		 	(struct sockaddr*)&cli_addr, slen) != -1)
+						cout << "File transfer initiated!" << endl;
 					cout << "Reading file" << endl;
 					/************ start to caculate the fliesize*********/
 					streampos size, beg;
@@ -97,7 +104,7 @@ int main(int argc, char* argv[])
 					size = fin_sizepos.tellg() - beg;
 					fsize = size;
 					fin_sizepos.seekg(beg); // resets stream pointer to the beginning
-					/************ finish to caculate the fliesize*********/
+					/************ finish to caculate the filesize*********/
 
 					// determine the number of packets to be sent
 					int numPackets = fsize / DATASIZE;
@@ -107,14 +114,11 @@ int main(int argc, char* argv[])
 					//file transfer
 					int CWnd = 3000; //specify the CWnd is 3000B
 					int CW_unused = CWnd;
-					int lst_pktSize = CWnd / DATASIZE;
 					int expect_ackNum = 0;
 					int tran_DataSize[200];
 
-					while(1){
-						
-						while(CW_unused > 0)
-						{
+					while(!fin.eof()) {
+						while(CW_unused > 0) {
 							Packet.seqNum++;
 							Packet.type = FILE_DATA;
 							if ( CW_unused < DATASIZE )
@@ -122,9 +126,7 @@ int main(int argc, char* argv[])
 								fin.read(Packet.payload, CW_unused);
 								tran_DataSize[Packet.seqNum] = CW_unused;
 								CW_unused = 0;
-							}
-							else{
-
+							} else {
 								fin.read(Packet.payload, DATASIZE);
 								tran_DataSize[Packet.seqNum] = DATASIZE;
 								CW_unused -= DATASIZE;  
@@ -134,23 +136,22 @@ int main(int argc, char* argv[])
 							sendto(fd, (void*)&Packet, count + headSize, 0,
 			 	 				(struct sockaddr*)&cli_addr, slen);
 							cout << "sending data amount: " << count << endl;
-							
-							
+							cout << "Sending Pkt SeqNum" << Packet.seqNum << endl;
 						}
 
 						//receive ack , need to use non-block recvfrom
 						bytes_received = recvfrom(fd, (void*)&Packet, packetSize, 
         				  0, (struct sockaddr*)&cli_addr, &slen);
-						if (bytes_received != -1){
+						if (bytes_received != -1) {
 							if (Packet.type == ACK)
 							{
 								//successfully receive the right ack, move the CW
 								if (Packet.ackNum == expect_ackNum)
 								{
-									CW_unused += tran_DataSize[CW_unused];
+									CW_unused += tran_DataSize[Packet.ackNum];
 									expect_ackNum++;
-									//restart the timer
-									continue;
+									// restart the timer
+									// continue;
 								}
 							}
 
@@ -159,27 +160,25 @@ int main(int argc, char* argv[])
 							* modify the file pointer
 							* reset some parameter to implement the file retransfer
 							*/
-
-
 						}
-
 					}
 
 					fin.close();
 					fin_sizepos.close();
 					//file transfer complete
-					while(1){
+					while(1) {
 
 						Packet.type = FILE_TRANSFER_COMPLETE;
-						char msg [] = "The file transfer is completed";
+						char msg [] = "The file transfer is completed!";
+						memset(&Packet.payload, 0, sizeof(Packet.payload));
 						strncpy(Packet.payload, msg, strlen(msg));
 						if(sendto(fd, (void*)&Packet, strlen(msg) + headSize, 0,
 			 		 		(struct sockaddr*)&cli_addr, slen) != -1 )
-							
 						//check ack
 						bytes_received = recvfrom(fd, (void*)&Packet,
 				 			packetSize, 0, (struct sockaddr*)&server_addr,
 							&slen);
+
 						if (bytes_received != -1) {
 							//file transfer complete
 							if (Packet.type == TRANSFER_COMPLETE_ACK)
@@ -189,9 +188,7 @@ int main(int argc, char* argv[])
 							}
 						}
 					}
-
 				}
-
 			}
         } else {
         	cerr << "recvfrom() failed" << endl;

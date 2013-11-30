@@ -21,6 +21,7 @@ enum PACKET_TYPE {
 	FILE_TRANSFER_REQUEST,
 	FILE_DATA,
 	ACK,
+	FILE_EXISTS,
 	FILE_NOTEXIST_ERROR,
 	FILE_CORRUPTION,
 	FILE_TRANSFER_COMPLETE,
@@ -39,3 +40,11 @@ struct PACKET{
 const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 3;
 const int packetSize = headSize + DATASIZE;
 PACKET Packet;
+
+/* int udpsend() {
+	
+}
+
+int udprecv() {
+	
+} */

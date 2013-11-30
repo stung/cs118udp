@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
 	Packet.type = FILE_TRANSFER_REQUEST;
 	ssize_t bytes_received;
 	int exp_pktNum = 0;
+	int pkt_ackNum = 0;
 
 	if (sendto(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
 		  (struct sockaddr*)&serv_addr, slen) != -1)
@@ -108,6 +109,7 @@ int main(int argc, char* argv[])
 		bytes_received = recvfrom(fd, (void*)&Packet,
 				 packetSize, 0, (struct sockaddr*)&serv_addr,
 				 &slen);
+		cout << "file exist payload: " << Packet.payload << endl;
 		if (bytes_received != -1)
 		{
 			//cannot find file  
@@ -115,17 +117,14 @@ int main(int argc, char* argv[])
 			{
 				cerr << Packet.payload << endl;
 				return 0;
-			}
-			else
-			{
+			} else {
 				cout << "Creating file" << endl;
 
 				string received_file = filename;
 				ofstream newfile(received_file.c_str());
 
 				if (newfile.is_open()) {
-
-					while(true){
+					while(1) {
 						bytes_received = recvfrom(fd, (void*)&Packet,
 				 			packetSize, 0, (struct sockaddr*)&serv_addr,
 							&slen);
@@ -139,10 +138,7 @@ int main(int argc, char* argv[])
 								Packet.type = TRANSFER_COMPLETE_ACK;
                                 if ( sendto(fd,(void*)&Packet, headSize, 0, 
 		  								(struct sockaddr*)&serv_addr, slen) != -1 )
-                                {
-                                    cout << "sending ACK" << Packet.ackNum << endl;
-                                }
-
+                                    cout << "sending transfer complete ACK" << endl;
 								break;
 							}
 							//file corruption
@@ -156,23 +152,27 @@ int main(int argc, char* argv[])
                                 {
                                     cout << "sending ACK" << Packet.ackNum << endl;
                                 }
-							} else if (Packet.type == FILE_DATA){
+							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
 								if (exp_pktNum == Packet.seqNum) {
 									//writing data
+									cout << (exp_pktNum == Packet.seqNum) << endl;
+									cout << "exp pktnum = " << exp_pktNum << endl;
+									cout << "packet seqnum = " << Packet.seqNum << endl;
 									newfile.write(Packet.payload, 
      								bytes_received - headSize);
 									cout << "writing " << bytes_received - headSize
 									<< " bytes into file" << endl;
 									exp_pktNum++;
-									Packet.ackNum++;
+									pkt_ackNum++;
 								} else {
 									//inform packet loss
-									cout << "Packet" << exp_pktNum << "lost" <<endl;
+									cout << "Packet" << exp_pktNum << " lost" <<endl;
 								}
 
 								//send ACK 
 								Packet.type = ACK;
+								Packet.ackNum = pkt_ackNum;
                                 if (sendto(fd, (void*)&Packet, headSize, 0, 
 		  								(struct sockaddr*)&serv_addr, slen) != -1 )
                                 {
@@ -188,8 +188,8 @@ int main(int argc, char* argv[])
 			cerr << "recvfrom() file ack fail" << endl;
 		}
 	}
-	//file requset sendto() fail
-	else{
+	//file request sendto() fail
+	else {
 
 		 cerr << "sendto() fail" << endl;
 	}
