@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
  	strncpy(Packet.payload, filename, sizeof(Packet.payload));
 	Packet.type = FILE_TRANSFER_REQUEST;
 	ssize_t bytes_received;
-	int exp_pktNum=0;
+	int exp_pktNum = 0;
 
 	if (sendto(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
 		  (struct sockaddr*)&serv_addr, slen) != -1)
@@ -136,9 +136,7 @@ int main(int argc, char* argv[])
 								cout << Packet.payload << endl;
 								
 								//send ACK
-								Packet.type = ACK;
-								//specify the ackNum is -2 to inform the sender
-								Packet.ackNum = -2;
+								Packet.type = TRANSFER_COMPLETE_ACK;
                                 if ( sendto(fd,(void*)&Packet, headSize, 0, 
 		  								(struct sockaddr*)&serv_addr, slen) != -1 )
                                 {

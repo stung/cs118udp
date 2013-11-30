@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 							&slen);
 						if (bytes_received != -1){
 							//file transfer complete
-							if (Packet.type == ACK && Packet.ackNum == -2)
+							if (Packet.type == TRANSFER_COMPLETE_ACK)
 							{
 								cout << "The file transfer is complete!" << endl;
 								break;
