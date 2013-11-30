@@ -14,7 +14,7 @@
 #include <utility>
 #include <signal.h>
 
-const int DATASIZE = 1024;
+const int DATASIZE = 800;
 
 enum PACKET_TYPE {
 	NONE = 0,
@@ -33,7 +33,7 @@ struct PACKET{
 	int seqNum;
 	int ackNum;
 	char payload[DATASIZE] ; 
-	PACKET() : type(NONE), seqNum(0), ackNum(-1){}
+	PACKET() : type(NONE), seqNum(-1), ackNum(-1){}
 };
 
 const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 3;
