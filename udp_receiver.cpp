@@ -168,13 +168,10 @@ int main(int argc, char* argv[])
 									<< " bytes into file" << endl;
 									exp_pktNum++;
 									Packet.ackNum++;
-								}
-								else{
+								} else {
 									//inform packet loss
 									cout << "Packet" << exp_pktNum << "lost" <<endl;
-
 								}
-								
 
 								//send ACK 
 								Packet.type = ACK;

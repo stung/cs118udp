@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
 					fin_sizepos.close();
 				}
 			}
-        } else{
+        } else {
         	cerr << "recvfrom() failed" << endl;
         }
     }
