@@ -146,8 +146,7 @@ int main(int argc, char* argv[])
 								break;
 							}
 							//file corruption
-							else if (Packet.type == FILE_CORRUPTION)
-							{
+							else if (Packet.type == FILE_CORRUPTION) {
 								cout << Packet.payload << endl;
 								
 								//send ACK
@@ -157,10 +156,9 @@ int main(int argc, char* argv[])
                                 {
                                     cout << "sending ACK" << Packet.ackNum << endl;
                                 }
-							}
-							else if (Packet.type == FILE_DATA){
+							} else if (Packet.type == FILE_DATA){
 								//get the expected pkt
-								if(exp_pktNum == Packet.seqNum){
+								if (exp_pktNum == Packet.seqNum) {
 									//writing data
 									newfile.write(Packet.payload, 
      								bytes_received - headSize);
@@ -186,12 +184,9 @@ int main(int argc, char* argv[])
 				}
 				newfile.close();	
 			}
-		}
-		else
-		{
+		} else {
 			cerr << "recvfrom() file ack fail" << endl;
 		}
-		
 	}
 	//file requset sendto() fail
 	else{
