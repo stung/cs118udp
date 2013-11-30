@@ -112,14 +112,16 @@ int main(int argc, char* argv[])
 						numPackets++;	
 
 					//file transfer
-					int CWnd = 3000; //specify the CWnd is 3000B
+					int CWnd = 1000; //specify the CWnd is 3000B
 					int CW_unused = CWnd;
 					int expect_ackNum = 0;
+					int pkt_seqNum = -1;
 					int tran_DataSize[200];
 
 					while(!fin.eof()) {
 						while(CW_unused > 0) {
-							Packet.seqNum++;
+							pkt_seqNum++;
+							Packet.seqNum = pkt_seqNum;
 							Packet.type = FILE_DATA;
 							if ( CW_unused < DATASIZE )
 							{
@@ -142,6 +144,7 @@ int main(int argc, char* argv[])
 						//receive ack , need to use non-block recvfrom
 						bytes_received = recvfrom(fd, (void*)&Packet, packetSize, 
         				  0, (struct sockaddr*)&cli_addr, &slen);
+						cout << "Current ack received" << Packet.ackNum << endl;
 						if (bytes_received != -1) {
 							if (Packet.type == ACK)
 							{

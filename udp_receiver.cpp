@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 	Packet.type = FILE_TRANSFER_REQUEST;
 	ssize_t bytes_received;
 	int exp_pktNum = 0;
-	int pkt_ackNum = 0;
+	int pkt_ackNum = -1;
 
 	if (sendto(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
 		  (struct sockaddr*)&serv_addr, slen) != -1)
@@ -109,7 +109,6 @@ int main(int argc, char* argv[])
 		bytes_received = recvfrom(fd, (void*)&Packet,
 				 packetSize, 0, (struct sockaddr*)&serv_addr,
 				 &slen);
-		cout << "file exist payload: " << Packet.payload << endl;
 		if (bytes_received != -1)
 		{
 			//cannot find file  
@@ -154,11 +153,9 @@ int main(int argc, char* argv[])
                                 }
 							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
+								cout << "Current seqNum" << Packet.seqNum << endl;
 								if (exp_pktNum == Packet.seqNum) {
 									//writing data
-									cout << (exp_pktNum == Packet.seqNum) << endl;
-									cout << "exp pktnum = " << exp_pktNum << endl;
-									cout << "packet seqnum = " << Packet.seqNum << endl;
 									newfile.write(Packet.payload, 
      								bytes_received - headSize);
 									cout << "writing " << bytes_received - headSize
