@@ -22,6 +22,8 @@ int main(int argc, char* argv[])
 	// the socket addr container
 	struct sockaddr_in server_addr, cli_addr;
    	socklen_t slen = sizeof(cli_addr);
+	// initialize random seed	
+	std::srand(time(0));
 
    	float Pl = (float)strtod(argv[3], NULL);
    	float Pc = (float)strtod(argv[4], NULL);

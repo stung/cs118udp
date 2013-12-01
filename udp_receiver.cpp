@@ -37,6 +37,8 @@ int main(int argc, char* argv[])
 	char buf[BUFLEN];
 	float Pl = (float)strtod(argv[4], NULL);
 	float Pc = (float)strtod(argv[5], NULL);
+	// initialize random seed
+	std::srand(time(0));
 
 	// the host entity container
 	struct hostent *hp;
