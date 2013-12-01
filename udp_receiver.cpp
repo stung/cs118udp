@@ -206,6 +206,8 @@ int main(int argc, char* argv[])
                                     " with no corruption" << endl;
                                 }
 							}
+						} else {
+							cout << "Rcvr timed out!" << endl;
 						}
 					}
 				}

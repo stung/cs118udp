@@ -204,6 +204,8 @@ int main(int argc, char* argv[])
 							* modify the file pointer
 							* reset some parameter to implement the file retransfer
 							*/
+						} else {
+							cout << "Sender timed out!" << endl;
 						}
 					}
 
