@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 				if (newfile.is_open()) {
 					while(1) {
 						select_status = select(fd + 1, &readset, NULL, NULL, &timeout);
-						if (FD_ISSET(fd, &readset)) {
+						if (select_status > 0) {
 							bytes_received = udprecv(fd, (void*)&Packet,
 					 			packetSize, 0, (struct sockaddr*)&serv_addr,
 								&slen, Pl, Pc);
@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
 								cout << "Corruption detected in packet " << Packet.seqNum << endl;
 								
 								//send ACK when the first unacked pkt in the CW was corrupted
-								if (exp_pktNum == Packet.seqNum)
+								/* if (exp_pktNum == Packet.seqNum)
 								{
 									if (Packet.seqNum == 0) {
 										Packet.seqNum = maxSeqNum;
@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
                                     	cout << "sending ACK" << Packet.ackNum << 
                                     	", not the first pkt corrupt" << endl;
                                 	}
-								}
+								} */
 							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
 								cout << "Current seqNum" << Packet.seqNum << endl;

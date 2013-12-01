@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
    	FD_ZERO(&readset);
    	FD_SET(fd, &readset);
    	struct timeval timeout;
-   	timeout.tv_sec = 20000; // in microseconds
+   	timeout.tv_usec = 20000; // in microseconds
 
 	cout << "Binding socket..." << endl;
 	/* 
@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
 						//receive ack 
 						// need to use non-block recvfrom
 						select_status = select(fd + 1, &readset, NULL, NULL, &timeout);
-						if (FD_ISSET(fd, &readset)) {
+						if (select_status > 0) {
 							bytes_received = udprecv(fd, (void*)&Packet, packetSize, 
 	        				  0, (struct sockaddr*)&cli_addr, &slen, Pl, Pc);
 							cout << "Current ACK received: " << Packet.ackNum << endl;
@@ -185,11 +185,11 @@ int main(int argc, char* argv[])
 									cumAckPointer += tran_DataSize[Packet.ackNum];
 									// restart the timer
 									// continue;
-								} else {
+								} /*else {
 									cout << "Expected ACK" << expect_ackNum << 
 									", received ACK" << Packet.ackNum << endl;
-									/*reset the CW_unused to retransmit all packets
-									* since the first unacked packet*/
+									//reset the CW_unused to retransmit all packets
+									// since the first unacked packet
 									CW_unused = CWnd;
 									//reset the seqNum
 									pkt_seqNum = Packet.ackNum;
@@ -203,7 +203,12 @@ int main(int argc, char* argv[])
 									fin.seekg(cumAckPointer);
 									cout << "cumAckPointer is " << cumAckPointer << endl;
 									cout << "ACKRstFile pointer is " << fin.tellg() << endl;
-								}
+								} */
+							} else if (Packet.type == FILE_CORRUPTION) {
+								cout << "Packet ACKNum" << Packet.ackNum << 
+								" is corrupted!" << endl;
+
+
 							}
 							
 							/*corruption or ack lost or not receive the right ackNum
@@ -213,6 +218,23 @@ int main(int argc, char* argv[])
 							*/
 						} else {
 							cout << "Sender timed out!" << endl;
+							cout << "Expected ACK" << expect_ackNum << 
+							", received ACK" << Packet.ackNum << endl;
+							/*reset the CW_unused to retransmit all packets
+							* since the first unacked packet*/
+							CW_unused = CWnd;
+							//reset the seqNum
+							pkt_seqNum = Packet.ackNum;
+							//modify the file pointer to the send_base
+							if (fin.eof()) {
+								fin.clear();
+								fin.seekg(0, ios::beg);
+								cout << "Is EOF set? " << fin.eof() << endl;
+								cout << "Reset the EOF bit" << endl;
+							}
+							fin.seekg(cumAckPointer);
+							cout << "cumAckPointer is " << cumAckPointer << endl;
+							cout << "ACKRstFile pointer is " << fin.tellg() << endl;
 						}
 					}
 
