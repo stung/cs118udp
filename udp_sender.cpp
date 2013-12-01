@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
    	FD_ZERO(&readset);
    	FD_SET(fd, &readset);
    	struct timeval timeout;
-   	timeout.tv_sec = 2; // in microseconds
+   	timeout.tv_sec = 20000; // in microseconds
 
 	cout << "Binding socket..." << endl;
 	/* 
@@ -70,8 +70,7 @@ int main(int argc, char* argv[])
 			 << endl;
 	}
 
-    while(1)
-    {
+    while(1) {
     	cout << "Waiting for data..." << endl;
 		ssize_t bytes_received;
 		bytes_received = udprecv(fd, (void*)&Packet, packetSize, 
@@ -80,7 +79,6 @@ int main(int argc, char* argv[])
         {
 			if (Packet.type == FILE_TRANSFER_REQUEST)
 			{
-
 				string filename(Packet.payload);
 				int count = 0;
 				cout << "Receiving " << filename << " request from: " << 
@@ -171,9 +169,7 @@ int main(int argc, char* argv[])
 						if (FD_ISSET(fd, &readset)) {
 							bytes_received = udprecv(fd, (void*)&Packet, packetSize, 
 	        				  0, (struct sockaddr*)&cli_addr, &slen, Pl, Pc);
-						}
-						cout << "Current ACK received: " << Packet.ackNum << endl;
-						if (select_status > -1) {
+							cout << "Current ACK received: " << Packet.ackNum << endl;
 							if (Packet.type == ACK)
 							{
 								//successfully receive the right ack, move the CW
@@ -226,20 +222,23 @@ int main(int argc, char* argv[])
 
 						if(sock_status != -1 ) {
 							//check ack
-							bytes_received = udprecv(fd, (void*)&Packet,
-					 			packetSize, 0, (struct sockaddr*)&server_addr,
-								&slen, Pl, Pc);
-							cout << "Packet" << Packet.seqNum << " received" << endl;
-							cout << "Packet type is " << Packet.type << endl;
-							cout << "Packet payload is " << Packet.payload << endl;
-							if (bytes_received != -1) {
-								//file transfer complete
-								if (Packet.type == TRANSFER_COMPLETE_ACK)
-								{
-									cout << "The file transfer is completed!" << endl;
-									break;
+							select_status = select(fd + 1, &readset, NULL, NULL, &timeout);
+							if (FD_ISSET(fd, &readset)) {
+								bytes_received = udprecv(fd, (void*)&Packet,
+						 			packetSize, 0, (struct sockaddr*)&server_addr,
+									&slen, Pl, Pc);
+								cout << "Packet" << Packet.seqNum << " received" << endl;
+								cout << "Packet type is " << Packet.type << endl;
+								cout << "Packet payload is " << Packet.payload << endl;
+								if (bytes_received != -1) {
+									//file transfer complete
+									if (Packet.type == TRANSFER_COMPLETE_ACK)
+									{
+										cout << "The file transfer is completed!" << endl;
+										break;
+									}
 								}
-							}
+							}	
 						}
 					}
 				}

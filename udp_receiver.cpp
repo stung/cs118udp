@@ -55,6 +55,14 @@ int main(int argc, char* argv[])
 		cerr << "Socket could not be created" << endl;
 		return 0;
 	}
+   	
+   	// select setup
+   	int select_status;
+   	fd_set readset;
+   	FD_ZERO(&readset);
+   	FD_SET(fd, &readset);
+   	struct timeval timeout;
+   	timeout.tv_sec = 20000; // in microseconds
 
 	memset((char *)&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
@@ -121,10 +129,11 @@ int main(int argc, char* argv[])
 
 				if (newfile.is_open()) {
 					while(1) {
-						bytes_received = udprecv(fd, (void*)&Packet,
-				 			packetSize, 0, (struct sockaddr*)&serv_addr,
-							&slen, Pl, Pc);
-						if (bytes_received != -1) {
+						select_status = select(fd + 1, &readset, NULL, NULL, &timeout);
+						if (FD_ISSET(fd, &readset)) {
+							bytes_received = udprecv(fd, (void*)&Packet,
+					 			packetSize, 0, (struct sockaddr*)&serv_addr,
+								&slen, Pl, Pc);
 							//file transfer complete
 							if (Packet.type == FILE_TRANSFER_COMPLETE)
 							{
@@ -208,7 +217,6 @@ int main(int argc, char* argv[])
 	}
 	//file request sendto() fail
 	else {
-
 		 cerr << "sendto() fail" << endl;
 	}
 	cout << "Closing socket..." << endl;
