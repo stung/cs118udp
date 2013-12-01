@@ -52,7 +52,7 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 	bool isLost = (lossProb < Pl);
 
 	if (isCorr) {
-		std::cout << "Packet corrupted!" << std::endl;
+		std::cout << "This packet now corrupted!" << std::endl;
 		Packet.type = FILE_CORRUPTION;
 	}
 	if (isLost) {

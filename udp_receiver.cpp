@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
 							//file corruption
 							else if (Packet.type == FILE_CORRUPTION) {
 								//inform packet corruption
-								cout << "Packet" << Packet.seqNum << " corrupt" <<endl;
+								cout << "Corruption detected in packet" << Packet.seqNum << endl;
 								
 								//send ACK when the first unacked pkt in the CW was corrupted
 								if (exp_pktNum == Packet.seqNum)
@@ -148,12 +148,15 @@ int main(int argc, char* argv[])
 									}
 									Packet.ackNum = Packet.seqNum - 1;
 									Packet.type = ACK;
+                                	memset(&Packet.payload, 0, sizeof(Packet.payload));
                                 	if (udpsend(fd,(void*)&Packet,headSize,0, 
 		  									(struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1 )
                                	 	{
                                     	cout << "sending ACK" << Packet.ackNum << endl;
                                 	}
-								}
+								} /*else {
+
+								}*/
 							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
 								cout << "Current seqNum" << Packet.seqNum << endl;
@@ -170,12 +173,13 @@ int main(int argc, char* argv[])
 									memset(&Packet.payload, 0, sizeof(Packet.payload));
 								} else {
 									//inform packet loss
-									cout << "Packet" << exp_pktNum << " lost" <<endl;
+									cout << "Packet" << exp_pktNum << " dropped" <<endl;
 								}
 
 								//send ACK 
 								Packet.type = ACK;
 								Packet.ackNum = pkt_ackNum;
+								memset(&Packet.payload, 0, sizeof(Packet.payload));
                                 if (udpsend(fd, (void*)&Packet, headSize, 0, 
 		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1 )
                                 {

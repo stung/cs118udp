@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 					int CW_unused = CWnd;
 					int expect_ackNum = 0;
 					int pkt_seqNum = -1;
-					int total_acked_fileSize = 0;
+					streampos cumAckPointer;
 
 					// determine the max number of seq #s
 					int pktsPerWnd = CWnd / DATASIZE;
@@ -132,6 +132,7 @@ int main(int argc, char* argv[])
 
 					while(!fin.eof()) {
 						while(CW_unused > 0) {
+							memset(&Packet.payload, 0, sizeof(Packet.payload));
 							pkt_seqNum++;
 							Packet.seqNum = pkt_seqNum % maxSeqNum;
 							Packet.type = FILE_DATA;
@@ -149,14 +150,14 @@ int main(int argc, char* argv[])
 							count = fin.gcount();
 							udpsend(fd, (void*)&Packet, count + headSize, 0,
 			 	 				(struct sockaddr*)&cli_addr, slen, Pl, Pc);
-							cout << "sending data amount: " << count << endl;
+							cout << "Sending data amount: " << count << endl;
 							cout << "Sending Pkt SeqNum" << Packet.seqNum << endl;
 						}
 
 						//receive ack , need to use non-block recvfrom
 						bytes_received = udprecv(fd, (void*)&Packet, packetSize, 
         				  0, (struct sockaddr*)&cli_addr, &slen, Pl, Pc);
-						cout << "Current ack received: " << Packet.ackNum << endl;
+						cout << "Current ACK received: " << Packet.ackNum << endl;
 						if (bytes_received != -1) {
 							if (Packet.type == ACK)
 							{
@@ -166,7 +167,7 @@ int main(int argc, char* argv[])
 									CW_unused += tran_DataSize[Packet.ackNum];
 									expect_ackNum++;
 									expect_ackNum = expect_ackNum % maxSeqNum;
-									total_acked_fileSize += tran_DataSize[Packet.ackNum];
+									cumAckPointer += tran_DataSize[Packet.ackNum];
 									// restart the timer
 									// continue;
 								} else {
@@ -176,7 +177,7 @@ int main(int argc, char* argv[])
 									//reset the seqNum
 									pkt_seqNum = Packet.ackNum;
 									//modify the file pointer to the send_base
-									fin.seekg(total_acked_fileSize);
+									fin.seekg(cumAckPointer);
 								}
 							}
 							
