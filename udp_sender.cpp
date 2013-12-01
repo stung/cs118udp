@@ -157,6 +157,7 @@ int main(int argc, char* argv[])
 							}
 							
 							count = fin.gcount();
+							Packet.ackNum = -1;
 							udpsend(fd, (void*)&Packet, count + headSize, 0,
 			 	 				(struct sockaddr*)&cli_addr, slen, Pl, Pc);
 							cout << "Sending data amount: " << count << endl;
@@ -218,6 +219,8 @@ int main(int argc, char* argv[])
 						memset(&Packet.payload, 0, sizeof(Packet.payload));
 						strncpy(Packet.payload, msg, strlen(msg));
 
+						Packet.seqNum = -1;
+						Packet.ackNum = -1;
 						sock_status = udpsend(fd, (void*)&Packet, strlen(msg) + headSize,
 							 			0, (struct sockaddr*)&cli_addr, slen, Pl, Pc);
 						cout << "testput" << endl;
