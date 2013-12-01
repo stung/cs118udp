@@ -197,6 +197,8 @@ int main(int argc, char* argv[])
 									if (fin.eof()) {
 										fin.clear();
 										fin.seekg(0, ios::beg);
+										cout << "Is EOF set? " << fin.eof() << endl;
+										cout << "Reset the EOF bit" << endl;
 									}
 									fin.seekg(cumAckPointer);
 									cout << "cumAckPointer is " << cumAckPointer << endl;

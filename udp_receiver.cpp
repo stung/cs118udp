@@ -170,11 +170,21 @@ int main(int argc, char* argv[])
                                 	if (status != -1)
                                	 	{
                                     	cout << "sending ACK" << Packet.ackNum << 
-                                    	" after corruption" << endl;
+                                    	", first pkt corruption" << endl;
                                 	}
-								} /*else {
-
-								}*/
+								} else {
+									cout << "Current ackNum: " << pkt_ackNum << endl;
+									Packet.ackNum = pkt_ackNum;
+									Packet.seqNum = -1;
+                                	memset(&Packet.payload, 0, sizeof(Packet.payload));
+                                	status = udpsend(fd,(void*)&Packet, headSize, 0, 
+		  									(struct sockaddr*)&serv_addr, slen, Pl, Pc);
+                                	if (status != -1)
+                               	 	{
+                                    	cout << "sending ACK" << Packet.ackNum << 
+                                    	", not the first pkt corrupt" << endl;
+                                	}
+								}
 							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
 								cout << "Current seqNum" << Packet.seqNum << endl;
