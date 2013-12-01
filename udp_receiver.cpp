@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 	float Pl = (float)strtod(argv[4], NULL);
 	float Pc = (float)strtod(argv[5], NULL);
 	// initialize random seed
-	std::srand(time(0));
+	srand(time(0));
 
 	// the host entity container
 	struct hostent *hp;
@@ -137,15 +137,23 @@ int main(int argc, char* argv[])
 							}
 							//file corruption
 							else if (Packet.type == FILE_CORRUPTION) {
-								cout << Packet.payload << endl;
+								//inform packet corruption
+								cout << "Packet" << Packet.seqNum << " corrupt" <<endl;
 								
-								//send ACK
-								Packet.type = ACK;
-                                if (udpsend(fd,(void*)&Packet,headSize,0, 
-		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1 )
-                                {
-                                    cout << "sending ACK" << Packet.ackNum << endl;
-                                }
+								//send ACK when the first unacked pkt in the CW was corrupted
+								if (exp_pktNum == Packet.seqNum)
+								{
+									if (Packet.seqNum == 0) {
+										Packet.seqNum = maxSeqNum;
+									}
+									Packet.ackNum = Packet.seqNum - 1;
+									Packet.type = ACK;
+                                	if (udpsend(fd,(void*)&Packet,headSize,0, 
+		  									(struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1 )
+                               	 	{
+                                    	cout << "sending ACK" << Packet.ackNum << endl;
+                                	}
+								}
 							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
 								cout << "Current seqNum" << Packet.seqNum << endl;

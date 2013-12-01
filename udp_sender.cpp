@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 	struct sockaddr_in server_addr, cli_addr;
    	socklen_t slen = sizeof(cli_addr);
 	// initialize random seed	
-	std::srand(time(0));
+	srand(time(0));
 
    	float Pl = (float)strtod(argv[3], NULL);
    	float Pc = (float)strtod(argv[4], NULL);
@@ -95,6 +95,7 @@ int main(int argc, char* argv[])
 					int CW_unused = CWnd;
 					int expect_ackNum = 0;
 					int pkt_seqNum = -1;
+					int total_acked_fileSize = 0;
 
 					// determine the max number of seq #s
 					int pktsPerWnd = CWnd / DATASIZE;
@@ -114,6 +115,7 @@ int main(int argc, char* argv[])
 			 		 	(struct sockaddr*)&cli_addr, slen, Pl, Pc) != -1)
 						cout << "File transfer initiated!" << endl;
 					cout << "Reading file" << endl;
+					
 					/************ start to caculate the fliesize*********/
 					streampos size, beg;
 					int fsize;
@@ -164,11 +166,20 @@ int main(int argc, char* argv[])
 									CW_unused += tran_DataSize[Packet.ackNum];
 									expect_ackNum++;
 									expect_ackNum = expect_ackNum % maxSeqNum;
+									total_acked_fileSize += tran_DataSize[Packet.ackNum];
 									// restart the timer
 									// continue;
+								} else {
+									/*reset the CW_unused to retransmit all packets
+									* since the first unacked packet*/
+									CW_unused = CWnd;
+									//reset the seqNum
+									pkt_seqNum = Packet.ackNum;
+									//modify the file pointer to the send_base
+									fin.seekg(total_acked_fileSize);
 								}
 							}
-
+							
 							/*corruption or ack lost or not receive the right ackNum
 							* waiting for timeout
 							* modify the file pointer

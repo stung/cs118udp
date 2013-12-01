@@ -46,13 +46,14 @@ PACKET Packet;
 int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 				const struct sockaddr *to, socklen_t tolen,
 				float Pl, float Pc) {
-	float corrProb = (float)std::rand() / (float)RAND_MAX;
-	float lossProb = (float)std::rand() / (float)RAND_MAX;
-	bool isCorr = (corrProb > Pc);
-	bool isLost = (lossProb > Pl);
+	float corrProb = (float)rand() / (float)RAND_MAX;
+	float lossProb = (float)rand() / (float)RAND_MAX;
+	bool isCorr = (corrProb < Pc);
+	bool isLost = (lossProb < Pl);
 
 	if (isCorr) {
 		std::cout << "Packet corrupted!" << std::endl;
+		Packet.type = FILE_CORRUPTION;
 	}
 	if (isLost) {
 		std::cout << "Packet lost!" << std::endl;
@@ -65,17 +66,6 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 int udprecv(int sockfd, void *buf, int len, unsigned int flags,
 				struct sockaddr *from, socklen_t *fromlen,
 				float Pl, float Pc) {
-	float corrProb = (float)std::rand() / (float)RAND_MAX;
-	float lossProb = (float)std::rand() / (float)RAND_MAX;
-	bool isCorr = (corrProb > Pc);
-	bool isLost = (lossProb > Pl);
-
-	if (isCorr) {
-		std::cout << "Packet corrupted!" << std::endl;
-	}
-	if (isLost) {
-		std::cout << "Packet lost!" << std::endl;
-	}
 
 	int status = recvfrom(sockfd, buf, len, flags, from, fromlen);
 	return status;
