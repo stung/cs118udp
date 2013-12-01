@@ -89,14 +89,16 @@ int main(int argc, char* argv[])
 	*/
 
 	char* filename = argv[3];
- 	strncpy(Packet.payload, filename, sizeof(Packet.payload));
+	memset(&Packet.payload, 0, sizeof(Packet.payload));
+ 	strncpy(Packet.payload, filename, strlen(filename));
 	Packet.type = FILE_TRANSFER_REQUEST;
 	ssize_t bytes_received;
 	int exp_pktNum = 0;
 	int pkt_ackNum = -1;
+	int status = 0;
 
 	if (udpsend(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
-		  (struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1)
+		  (struct sockaddr*)&serv_addr, slen, 0, 0) != -1)
 	{
 		//receive the packet to know if the file is exsit
 		bytes_received = udprecv(fd, (void*)&Packet,
@@ -122,7 +124,7 @@ int main(int argc, char* argv[])
 						bytes_received = udprecv(fd, (void*)&Packet,
 				 			packetSize, 0, (struct sockaddr*)&serv_addr,
 							&slen, Pl, Pc);
-						if (bytes_received != -1){
+						if (bytes_received != -1) {
 							//file transfer complete
 							if (Packet.type == FILE_TRANSFER_COMPLETE)
 							{
@@ -130,15 +132,17 @@ int main(int argc, char* argv[])
 								
 								//send ACK
 								Packet.type = TRANSFER_COMPLETE_ACK;
-                                if (udpsend(fd,(void*)&Packet, headSize, 0, 
-		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1 )
+                            	memset(&Packet.payload, 0, sizeof(Packet.payload));
+                            	status = udpsend(fd,(void*)&Packet, headSize, 0, 
+		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc);
+                                if (status != -1)
                                     cout << "sending transfer complete ACK" << endl;
 								break;
 							}
 							//file corruption
 							else if (Packet.type == FILE_CORRUPTION) {
 								//inform packet corruption
-								cout << "Corruption detected in packet" << Packet.seqNum << endl;
+								cout << "Corruption detected in packet " << Packet.seqNum << endl;
 								
 								//send ACK when the first unacked pkt in the CW was corrupted
 								if (exp_pktNum == Packet.seqNum)
@@ -149,10 +153,12 @@ int main(int argc, char* argv[])
 									Packet.ackNum = Packet.seqNum - 1;
 									Packet.type = ACK;
                                 	memset(&Packet.payload, 0, sizeof(Packet.payload));
-                                	if (udpsend(fd,(void*)&Packet,headSize,0, 
-		  									(struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1 )
+                                	status = udpsend(fd,(void*)&Packet, headSize, 0, 
+		  									(struct sockaddr*)&serv_addr, slen, Pl, Pc);
+                                	if (status != -1)
                                	 	{
-                                    	cout << "sending ACK" << Packet.ackNum << endl;
+                                    	cout << "sending ACK" << Packet.ackNum << 
+                                    	" after corruption" << endl;
                                 	}
 								} /*else {
 
@@ -162,8 +168,7 @@ int main(int argc, char* argv[])
 								cout << "Current seqNum" << Packet.seqNum << endl;
 								if (exp_pktNum == Packet.seqNum) {
 									//writing data
-									newfile.write(Packet.payload, 
-     								bytes_received - headSize);
+									newfile.write(Packet.payload, bytes_received - headSize);
 									cout << "writing " << bytes_received - headSize
 									<< " bytes into file" << endl;
 									exp_pktNum++;
@@ -171,19 +176,25 @@ int main(int argc, char* argv[])
 									pkt_ackNum = pkt_ackNum % maxSeqNum;
 									exp_pktNum = exp_pktNum % maxSeqNum;
 									memset(&Packet.payload, 0, sizeof(Packet.payload));
+									cout << "Packet" << Packet.seqNum << " written, " <<
+									"expecting packet" << exp_pktNum << " next" << endl;
 								} else {
 									//inform packet loss
-									cout << "Packet" << exp_pktNum << " dropped" <<endl;
+									cout << "Expected packet" << exp_pktNum << 
+									", packet" << Packet.seqNum << " dropped" << endl;
 								}
 
 								//send ACK 
 								Packet.type = ACK;
 								Packet.ackNum = pkt_ackNum;
 								memset(&Packet.payload, 0, sizeof(Packet.payload));
-                                if (udpsend(fd, (void*)&Packet, headSize, 0, 
-		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1 )
+
+								status = udpsend(fd, (void*)&Packet, headSize, 0, 
+		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc);
+                                if (status != -1)
                                 {
-                                    cout << "sending ACK" << Packet.ackNum << endl;
+                                    cout << "sending ACK" << Packet.ackNum << 
+                                    " with no corruption" << endl;
                                 }
 							}
 						}

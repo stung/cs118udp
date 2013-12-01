@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 
    	float Pl = (float)strtod(argv[3], NULL);
    	float Pc = (float)strtod(argv[4], NULL);
+   	int sock_status;
 
 	cout << "Creating socket..." << endl;
 
@@ -36,6 +37,14 @@ int main(int argc, char* argv[])
 		cerr << "Socket could not be created" << endl;
 		return 0;
 	}
+   	
+   	// select setup
+   	int select_status;
+   	fd_set readset;
+   	FD_ZERO(&readset);
+   	FD_SET(fd, &readset);
+   	struct timeval timeout;
+   	timeout.tv_sec = 2; // in microseconds
 
 	cout << "Binding socket..." << endl;
 	/* 
@@ -66,7 +75,7 @@ int main(int argc, char* argv[])
     	cout << "Waiting for data..." << endl;
 		ssize_t bytes_received;
 		bytes_received = udprecv(fd, (void*)&Packet, packetSize, 
-        				  0, (struct sockaddr*)&cli_addr, &slen, Pl, Pc);
+        				  0, (struct sockaddr*)&cli_addr, &slen, 0, 0);
         if (bytes_received != -1)
         {
 			if (Packet.type == FILE_TRANSFER_REQUEST)
@@ -88,9 +97,9 @@ int main(int argc, char* argv[])
 					memset(&Packet.payload, 0, sizeof(Packet.payload));
 					strncpy(Packet.payload, err_msg, strlen(err_msg));
 					if(udpsend(fd, (void*)&Packet, strlen(err_msg) + headSize, 0,
-			 		 	(struct sockaddr*)&cli_addr, slen, Pl, Pc) != -1)
+			 		 	(struct sockaddr*)&cli_addr, slen, 0, 0) != -1)
 						cout << "File open error!" << endl;
-				} else {					//file transfer
+				} else { //file transfer
 					int CWnd = strtol(argv[2], NULL, 10);
 					int CW_unused = CWnd;
 					int expect_ackNum = 0;
@@ -112,7 +121,7 @@ int main(int argc, char* argv[])
 					memset(&Packet.payload, 0, sizeof(Packet.payload));
 					strncpy(Packet.payload, begin_msg, strlen(begin_msg));
 					if(udpsend(fd, (void*)&Packet, strlen(begin_msg) + headSize, 0,
-			 		 	(struct sockaddr*)&cli_addr, slen, Pl, Pc) != -1)
+			 		 	(struct sockaddr*)&cli_addr, slen, 0, 0) != -1)
 						cout << "File transfer initiated!" << endl;
 					cout << "Reading file" << endl;
 					
@@ -141,10 +150,12 @@ int main(int argc, char* argv[])
 								fin.read(Packet.payload, CW_unused);
 								tran_DataSize[Packet.seqNum] = CW_unused;
 								CW_unused = 0;
+								cout << "CWunFile pointer is " << fin.tellg() << endl;
 							} else {
 								fin.read(Packet.payload, DATASIZE);
 								tran_DataSize[Packet.seqNum] = DATASIZE;
-								CW_unused -= DATASIZE;  
+								CW_unused -= DATASIZE;
+								cout << "DATAFile pointer is " << fin.tellg() << endl;
 							}
 							
 							count = fin.gcount();
@@ -154,16 +165,21 @@ int main(int argc, char* argv[])
 							cout << "Sending Pkt SeqNum" << Packet.seqNum << endl;
 						}
 
-						//receive ack , need to use non-block recvfrom
-						bytes_received = udprecv(fd, (void*)&Packet, packetSize, 
-        				  0, (struct sockaddr*)&cli_addr, &slen, Pl, Pc);
+						//receive ack 
+						// need to use non-block recvfrom
+						select_status = select(fd + 1, &readset, NULL, NULL, &timeout);
+						if (FD_ISSET(fd, &readset)) {
+							bytes_received = udprecv(fd, (void*)&Packet, packetSize, 
+	        				  0, (struct sockaddr*)&cli_addr, &slen, Pl, Pc);
+						}
 						cout << "Current ACK received: " << Packet.ackNum << endl;
-						if (bytes_received != -1) {
+						if (select_status > -1) {
 							if (Packet.type == ACK)
 							{
 								//successfully receive the right ack, move the CW
 								if (Packet.ackNum == expect_ackNum)
 								{
+									cout << "ACK" << expect_ackNum << " received" << endl;
 									CW_unused += tran_DataSize[Packet.ackNum];
 									expect_ackNum++;
 									expect_ackNum = expect_ackNum % maxSeqNum;
@@ -171,13 +187,19 @@ int main(int argc, char* argv[])
 									// restart the timer
 									// continue;
 								} else {
+									cout << "Expected ACK" << expect_ackNum << 
+									", received ACK" << Packet.ackNum << endl;
 									/*reset the CW_unused to retransmit all packets
 									* since the first unacked packet*/
 									CW_unused = CWnd;
 									//reset the seqNum
 									pkt_seqNum = Packet.ackNum;
 									//modify the file pointer to the send_base
+									if (fin.tellg() == -1)
+										{break;}
 									fin.seekg(cumAckPointer);
+									cout << "cumAckPointer is " << cumAckPointer << endl;
+									cout << "ACKRstFile pointer is " << fin.tellg() << endl;
 								}
 							}
 							
@@ -198,13 +220,18 @@ int main(int argc, char* argv[])
 						memset(&Packet.payload, 0, sizeof(Packet.payload));
 						strncpy(Packet.payload, msg, strlen(msg));
 
-						if(udpsend(fd, (void*)&Packet, strlen(msg) + headSize, 0,
-			 		 		(struct sockaddr*)&cli_addr, slen, Pl, Pc) != -1 ) {
+						sock_status = udpsend(fd, (void*)&Packet, strlen(msg) + headSize,
+							 			0, (struct sockaddr*)&cli_addr, slen, Pl, Pc);
+						cout << "testput" << endl;
+
+						if(sock_status != -1 ) {
 							//check ack
 							bytes_received = udprecv(fd, (void*)&Packet,
 					 			packetSize, 0, (struct sockaddr*)&server_addr,
 								&slen, Pl, Pc);
-
+							cout << "Packet" << Packet.seqNum << " received" << endl;
+							cout << "Packet type is " << Packet.type << endl;
+							cout << "Packet payload is " << Packet.payload << endl;
 							if (bytes_received != -1) {
 								//file transfer complete
 								if (Packet.type == TRANSFER_COMPLETE_ACK)

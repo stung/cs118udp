@@ -35,7 +35,7 @@ struct PACKET{
 	int seqNum;
 	int ackNum;
 	int maxSeqNum;
-	char payload[DATASIZE] ; 
+	char payload[DATASIZE]; 
 	PACKET() : type(NONE), seqNum(-1), ackNum(-1), maxSeqNum(0){}
 };
 
@@ -52,7 +52,9 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 	bool isLost = (lossProb < Pl);
 
 	if (isCorr) {
-		std::cout << "This packet now corrupted!" << std::endl;
+		std::cout << "Packet seqNum" << Packet.seqNum <<
+		"/" << "ackNum" << Packet.ackNum <<
+		" now corrupted!" << std::endl;
 		Packet.type = FILE_CORRUPTION;
 	}
 	if (isLost) {
