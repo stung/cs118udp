@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 					/************ finish to caculate the filesize*********/
 
 
-					while(!fin.eof()) {
+					while(cumAckPointer < fsize) {
 						while(CW_unused > 0) {
 							memset(&Packet.payload, 0, sizeof(Packet.payload));
 							pkt_seqNum++;
@@ -177,7 +177,9 @@ int main(int argc, char* argv[])
 								if (Packet.ackNum == expect_ackNum)
 								{
 									cout << "ACK" << expect_ackNum << " received" << endl;
-									CW_unused += tran_DataSize[Packet.ackNum];
+									if (!fin.eof()) {
+										CW_unused += tran_DataSize[Packet.ackNum];
+									}
 									expect_ackNum++;
 									expect_ackNum = expect_ackNum % maxSeqNum;
 									cumAckPointer += tran_DataSize[Packet.ackNum];
@@ -192,8 +194,10 @@ int main(int argc, char* argv[])
 									//reset the seqNum
 									pkt_seqNum = Packet.ackNum;
 									//modify the file pointer to the send_base
-									if (fin.tellg() == -1)
-										{break;}
+									if (fin.eof()) {
+										fin.clear();
+										fin.seekg(0, ios::beg);
+									}
 									fin.seekg(cumAckPointer);
 									cout << "cumAckPointer is " << cumAckPointer << endl;
 									cout << "ACKRstFile pointer is " << fin.tellg() << endl;
@@ -223,7 +227,7 @@ int main(int argc, char* argv[])
 						Packet.ackNum = -1;
 						sock_status = udpsend(fd, (void*)&Packet, strlen(msg) + headSize,
 							 			0, (struct sockaddr*)&cli_addr, slen, Pl, Pc);
-						cout << "testput" << endl;
+						cout << "Waiting for transfer complete ACK" << endl;
 
 						if(sock_status != -1 ) {
 							//check ack

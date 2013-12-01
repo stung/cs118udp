@@ -190,25 +190,25 @@ int main(int argc, char* argv[])
 									memset(&Packet.payload, 0, sizeof(Packet.payload));
 									cout << "Packet" << Packet.seqNum << " written, " <<
 									"expecting packet" << exp_pktNum << " next" << endl;
+
+									//send ACK 
+									Packet.type = ACK;
+									Packet.ackNum = pkt_ackNum;
+									Packet.seqNum = -1;
+									memset(&Packet.payload, 0, sizeof(Packet.payload));
+
+									status = udpsend(fd, (void*)&Packet, headSize, 0, 
+			  								(struct sockaddr*)&serv_addr, slen, Pl, Pc);
+	                                if (status != -1)
+	                                {
+	                                    cout << "sending ACK" << Packet.ackNum << 
+	                                    " with no corruption" << endl;
+	                                }
 								} else {
 									//inform packet loss
 									cout << "Expected packet" << exp_pktNum << 
 									", packet" << Packet.seqNum << " dropped" << endl;
 								}
-
-								//send ACK 
-								Packet.type = ACK;
-								Packet.ackNum = pkt_ackNum;
-								Packet.seqNum = -1;
-								memset(&Packet.payload, 0, sizeof(Packet.payload));
-
-								status = udpsend(fd, (void*)&Packet, headSize, 0, 
-		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc);
-                                if (status != -1)
-                                {
-                                    cout << "sending ACK" << Packet.ackNum << 
-                                    " with no corruption" << endl;
-                                }
 							}
 						} else {
 							cout << "Rcvr timed out!" << endl;
