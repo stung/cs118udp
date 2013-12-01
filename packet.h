@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <utility>
@@ -33,18 +34,26 @@ struct PACKET{
 	PACKET_TYPE type;
 	int seqNum;
 	int ackNum;
+	int maxSeqNum;
 	char payload[DATASIZE] ; 
-	PACKET() : type(NONE), seqNum(-1), ackNum(-1){}
+	PACKET() : type(NONE), seqNum(-1), ackNum(-1), maxSeqNum(0){}
 };
 
 const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 3;
 const int packetSize = headSize + DATASIZE;
 PACKET Packet;
 
-/* int udpsend() {
-	
+int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
+				const struct sockaddr *to, socklen_t tolen,
+				float Pl, float Pc) {
+	int status = sendto(sockfd, msg, len, flags, to, tolen);
+	memset(&Packet.payload, 0, sizeof(Packet.payload));
+	return status;
 }
 
-int udprecv() {
-	
-} */
+int udprecv(int sockfd, void *buf, int len, unsigned int flags,
+				struct sockaddr *from, socklen_t *fromlen,
+				float Pl, float Pc) {
+	int status = recvfrom(sockfd, buf, len, flags, from, fromlen);
+	return status;
+}

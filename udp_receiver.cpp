@@ -35,6 +35,8 @@ int main(int argc, char* argv[])
 	int i;
 	socklen_t slen = sizeof(serv_addr);
 	char buf[BUFLEN];
+	float Pl = 1.0;
+	float Pc = 1.0;
 
 	// the host entity container
 	struct hostent *hp;
@@ -51,17 +53,6 @@ int main(int argc, char* argv[])
 		cerr << "Socket could not be created" << endl;
 		return 0;
 	}
-
-	cout << "Binding socket..." << endl;
-
-	/* 
-	Bind to arbitrary return addr (client side)
-	Client will only send responses
-	INADDR_ANY: any IP addr
-	0: OS will select the port number
-	htonl converts long to network rep (address)
-	htons converts short to network rep (port #)
-	*/
 
 	memset((char *)&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
@@ -102,13 +93,13 @@ int main(int argc, char* argv[])
 	int exp_pktNum = 0;
 	int pkt_ackNum = -1;
 
-	if (sendto(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
-		  (struct sockaddr*)&serv_addr, slen) != -1)
+	if (udpsend(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
+		  (struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1)
 	{
 		//receive the packet to know if the file is exsit
-		bytes_received = recvfrom(fd, (void*)&Packet,
+		bytes_received = udprecv(fd, (void*)&Packet,
 				 packetSize, 0, (struct sockaddr*)&serv_addr,
-				 &slen);
+				 &slen, Pl, Pc);
 		if (bytes_received != -1)
 		{
 			//cannot find file  
@@ -117,6 +108,8 @@ int main(int argc, char* argv[])
 				cerr << Packet.payload << endl;
 				return 0;
 			} else {
+				int maxSeqNum = Packet.maxSeqNum;
+				cout << "Max Seq Num is: " << maxSeqNum << endl;	
 				cout << "Creating file" << endl;
 
 				string received_file = filename;
@@ -124,9 +117,9 @@ int main(int argc, char* argv[])
 
 				if (newfile.is_open()) {
 					while(1) {
-						bytes_received = recvfrom(fd, (void*)&Packet,
+						bytes_received = udprecv(fd, (void*)&Packet,
 				 			packetSize, 0, (struct sockaddr*)&serv_addr,
-							&slen);
+							&slen, Pl, Pc);
 						if (bytes_received != -1){
 							//file transfer complete
 							if (Packet.type == FILE_TRANSFER_COMPLETE)
@@ -135,8 +128,8 @@ int main(int argc, char* argv[])
 								
 								//send ACK
 								Packet.type = TRANSFER_COMPLETE_ACK;
-                                if ( sendto(fd,(void*)&Packet, headSize, 0, 
-		  								(struct sockaddr*)&serv_addr, slen) != -1 )
+                                if (udpsend(fd,(void*)&Packet, headSize, 0, 
+		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1 )
                                     cout << "sending transfer complete ACK" << endl;
 								break;
 							}
@@ -146,8 +139,8 @@ int main(int argc, char* argv[])
 								
 								//send ACK
 								Packet.type = ACK;
-                                if ( sendto(fd,(void*)&Packet,headSize,0, 
-		  								(struct sockaddr*)&serv_addr, slen) != -1 )
+                                if (udpsend(fd,(void*)&Packet,headSize,0, 
+		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1 )
                                 {
                                     cout << "sending ACK" << Packet.ackNum << endl;
                                 }
@@ -162,6 +155,9 @@ int main(int argc, char* argv[])
 									<< " bytes into file" << endl;
 									exp_pktNum++;
 									pkt_ackNum++;
+									pkt_ackNum = pkt_ackNum % maxSeqNum;
+									exp_pktNum = exp_pktNum % maxSeqNum;
+									memset(&Packet.payload, 0, sizeof(Packet.payload));
 								} else {
 									//inform packet loss
 									cout << "Packet" << exp_pktNum << " lost" <<endl;
@@ -170,8 +166,8 @@ int main(int argc, char* argv[])
 								//send ACK 
 								Packet.type = ACK;
 								Packet.ackNum = pkt_ackNum;
-                                if (sendto(fd, (void*)&Packet, headSize, 0, 
-		  								(struct sockaddr*)&serv_addr, slen) != -1 )
+                                if (udpsend(fd, (void*)&Packet, headSize, 0, 
+		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc) != -1 )
                                 {
                                     cout << "sending ACK" << Packet.ackNum << endl;
                                 }
