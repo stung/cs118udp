@@ -55,14 +55,6 @@ int main(int argc, char* argv[])
 		cerr << "Socket could not be created" << endl;
 		return 0;
 	}
-   	
-   	// select setup
-   	int select_status;
-   	fd_set readset;
-   	FD_ZERO(&readset);
-   	FD_SET(fd, &readset);
-   	struct timeval timeout;
-   	timeout.tv_sec = 20000; // in microseconds
 
 	memset((char *)&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
@@ -129,11 +121,11 @@ int main(int argc, char* argv[])
 
 				if (newfile.is_open()) {
 					while(1) {
-						select_status = select(fd + 1, &readset, NULL, NULL, &timeout);
-						if (select_status > 0) {
-							bytes_received = udprecv(fd, (void*)&Packet,
-					 			packetSize, 0, (struct sockaddr*)&serv_addr,
-								&slen, Pl, Pc);
+						bytes_received = udprecv(fd, (void*)&Packet,
+			 			packetSize, 0, (struct sockaddr*)&serv_addr,
+						&slen, Pl, Pc);
+						if (bytes_received != -1) {
+
 							//file transfer complete
 							if (Packet.type == FILE_TRANSFER_COMPLETE)
 							{
@@ -149,11 +141,10 @@ int main(int argc, char* argv[])
                                 if (status != -1)
                                     cout << "sending transfer complete ACK" << endl;
 								break;
-							}
-							//file corruption
-							else if (Packet.type == FILE_CORRUPTION) {
+							} else if (Packet.type == FILE_CORRUPTION) { //file corruption
 								//inform packet corruption
-								cout << "Corruption detected in packet " << Packet.seqNum << endl;
+								cout << "Corruption detected in packet " <<
+									Packet.seqNum << endl;
 								
 								//send ACK when the first unacked pkt in the CW was corrupted
 								/* if (exp_pktNum == Packet.seqNum)
@@ -220,9 +211,7 @@ int main(int argc, char* argv[])
 									", packet" << Packet.seqNum << " dropped" << endl;
 								}
 							}
-						} else {
-							cout << "Rcvr timed out!" << endl;
-						}
+						}  
 					}
 				}
 				newfile.close();	
