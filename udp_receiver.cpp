@@ -21,11 +21,11 @@ void paddr(unsigned char a[])
 
 int main(int argc, char* argv[])
 {
-	if (argc < 4) {
+	if (argc < 6) {
 		cerr << "Usage: " << argv[0] << 
 			" <sender_hostname> " << 
 			"<sender_portnumber> " <<
-			"<filename>" << endl;
+			"<filename> " << "Pl " << "Pc " << endl;
 		return 0;
 	}
 
@@ -35,8 +35,8 @@ int main(int argc, char* argv[])
 	int i;
 	socklen_t slen = sizeof(serv_addr);
 	char buf[BUFLEN];
-	float Pl = 1.0;
-	float Pc = 1.0;
+	float Pl = (float)strtod(argv[4], NULL);
+	float Pc = (float)strtod(argv[5], NULL);
 
 	// the host entity container
 	struct hostent *hp;

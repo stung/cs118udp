@@ -12,9 +12,10 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-	if (argc < 3) {
+	if (argc < 5) {
 		cerr << "Usage: " << argv[0] << 
-			" <sender_portnumber> " << "CWnd" << endl;
+			" <sender_portnumber> " << "CWnd " << 
+			"Pl " << "Pc " << endl;
 		return 0;
 	}
 
@@ -22,8 +23,8 @@ int main(int argc, char* argv[])
 	struct sockaddr_in server_addr, cli_addr;
    	socklen_t slen = sizeof(cli_addr);
 
-   	float Pl = 1.0;
-   	float Pc = 1.0;
+   	float Pl = (float)strtod(argv[3], NULL);
+   	float Pc = (float)strtod(argv[4], NULL);
 
 	cout << "Creating socket..." << endl;
 
@@ -151,7 +152,7 @@ int main(int argc, char* argv[])
 						//receive ack , need to use non-block recvfrom
 						bytes_received = udprecv(fd, (void*)&Packet, packetSize, 
         				  0, (struct sockaddr*)&cli_addr, &slen, Pl, Pc);
-						cout << "Current ack received" << Packet.ackNum << endl;
+						cout << "Current ack received: " << Packet.ackNum << endl;
 						if (bytes_received != -1) {
 							if (Packet.type == ACK)
 							{

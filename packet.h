@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <utility>
 #include <signal.h>
+#include <time.h>
 
 const int DATASIZE = 800;
 
@@ -30,7 +31,6 @@ enum PACKET_TYPE {
 };
 
 struct PACKET{
-
 	PACKET_TYPE type;
 	int seqNum;
 	int ackNum;
@@ -46,6 +46,22 @@ PACKET Packet;
 int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 				const struct sockaddr *to, socklen_t tolen,
 				float Pl, float Pc) {
+	// initialize random seed
+	std::srand(time(0));
+
+	float corrProb = (float)std::rand() / (float)RAND_MAX;
+	float lossProb = (float)std::rand() / (float)RAND_MAX;
+	bool isCorr = (corrProb > Pc);
+	bool isLost = (lossProb > Pl);
+	std::cout << "corrProb is " << corrProb << std::endl;
+	std::cout << "lossProb is " << lossProb << std::endl;
+
+	if (isCorr) {
+		std::cout << "Packet corrupted!" << std::endl;
+	}
+	if (isLost) {
+		std::cout << "Packet lost!" << std::endl;
+	}
 	int status = sendto(sockfd, msg, len, flags, to, tolen);
 	memset(&Packet.payload, 0, sizeof(Packet.payload));
 	return status;
@@ -54,6 +70,23 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 int udprecv(int sockfd, void *buf, int len, unsigned int flags,
 				struct sockaddr *from, socklen_t *fromlen,
 				float Pl, float Pc) {
+	// initialize random seed	
+	std::srand(time(0));
+
+	float corrProb = (float)std::rand() / (float)RAND_MAX;
+	float lossProb = (float)std::rand() / (float)RAND_MAX;
+	bool isCorr = (corrProb > Pc);
+	bool isLost = (lossProb > Pl);
+	std::cout << "corrProb is " << corrProb << std::endl;
+	std::cout << "lossProb is " << lossProb << std::endl;
+
+	if (isCorr) {
+		std::cout << "Packet corrupted!" << std::endl;
+	}
+	if (isLost) {
+		std::cout << "Packet lost!" << std::endl;
+	}
+
 	int status = recvfrom(sockfd, buf, len, flags, from, fromlen);
 	return status;
 }
