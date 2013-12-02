@@ -95,8 +95,7 @@ int main(int argc, char* argv[])
 					int CWnd = strtol(argv[2], NULL, 10);
 					int CW_unused = CWnd;
 					int expect_ackNum = 0;
-					int ACKupto = -1;
-					int pkt_seqNum = -1;
+					int pkt_seqNum = 0;
 					streampos cumAckPointer;
 
 					// determine the max number of seq #s
@@ -154,27 +153,27 @@ int main(int argc, char* argv[])
 							memset(&Packet.payload, 0, sizeof(Packet.payload));
 							Packet.type = FILE_DATA;
 							Packet.ackNum = -1;
-							pkt_seqNum++;
-							pkt_seqNum = pkt_seqNum % maxSeqNum;
 							Packet.seqNum = pkt_seqNum;
-							
-							/*if ( CW_unused < DATASIZE )
+
+							if ( CW_unused < DATASIZE )
 							{
-								fin.read(Packet.payload, CW_unused);
-								tran_DataSize[Packet.seqNum] = CW_unused;
+								fin.read(Packet.payload, tran_DataSize[Packet.seqNum]);
+								//tran_DataSize[Packet.seqNum] = CW_unused;
 								CW_unused = 0;
 								cout << "CWunFile pointer is " << fin.tellg() << endl;
 								cout << "cumAckPointer is " << cumAckPointer << endl;
 							} else {
-								fin.read(Packet.payload, DATASIZE);
-								tran_DataSize[Packet.seqNum] = DATASIZE;
-								CW_unused -= DATASIZE;
+								fin.read(Packet.payload, tran_DataSize[Packet.seqNum]);
+								//tran_DataSize[Packet.seqNum] = DATASIZE;
+								CW_unused -= tran_DataSize[Packet.seqNum];
 								cout << "DATAFile pointer is " << fin.tellg() << endl;
 								cout << "cumAckPointer is " << cumAckPointer << endl;
-							}*/
+							}
 							
 							count = fin.gcount();
 							if (count > 0) {
+								pkt_seqNum++;
+								pkt_seqNum = pkt_seqNum % maxSeqNum;
 								cout << "Write Payload is: -------------------" <<
 								"-----------------------" << endl << Packet.payload << 
 								endl << "-------------------------------------------------" << endl;
@@ -276,8 +275,8 @@ int main(int argc, char* argv[])
 							* since the first unacked packet*/
 							CW_unused = CWnd;
 							//reset the seqNum
-							cout << "Resetting the SEQnum to: " << expect_ackNum - 1 << endl;
-							pkt_seqNum = expect_ackNum - 1;
+							cout << "Resetting the SEQnum to: " << expect_ackNum << endl;
+							pkt_seqNum = expect_ackNum;
 							//modify the file pointer to the send_base
 							if (fin.eof()) {
 								fin.clear();
