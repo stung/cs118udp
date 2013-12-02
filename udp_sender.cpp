@@ -55,7 +55,6 @@ int main(int argc, char* argv[])
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	server_addr.sin_port = htons(portnum);
 
-	cout << "Binding to " << (short)server_addr.sin_port << endl;
 	if (bind(fd, (struct sockaddr *)&server_addr,
 			sizeof(server_addr)) < 0) {
 		cerr << "Failed to bind to " << portnum << endl;
@@ -189,9 +188,27 @@ int main(int argc, char* argv[])
 									cumAckPointer += tran_DataSize[Packet.ackNum];
 									// restart the timer
 									// continue;
+								} else if ((Packet.ackNum < (expect_ackNum + pktsPerWnd)) &&
+											(Packet.ackNum > (expect_ackNum))) {
+									cout << "ACK" << Packet.ackNum << " received," <<
+										" expected packet" << expect_ackNum <<
+										", still within bounds" << endl;
+									expect_ackNum = Packet.ackNum;
+									expect_ackNum++;
+
+								} else if ((expect_ackNum > pktsPerWnd) &&
+											((Packet.ackNum < (expect_ackNum - pktsPerWnd)) || 
+											(Packet.ackNum > (expect_ackNum + pktsPerWnd)))) {
+									cout << "ACK" << Packet.ackNum << " received," <<
+										" expected packet" << expect_ackNum <<
+										", still within bounds" << endl;
+									expect_ackNum = Packet.ackNum;
+									expect_ackNum++;
+
 								} else {
 									cout << "Expected ACK" << expect_ackNum << 
-										", received ACK" << Packet.ackNum << endl;									
+										", received ACK" << Packet.ackNum << 
+										", out of bounds" << endl;									
 								}
 							} else if (Packet.type == FILE_CORRUPTION) {
 								cout << "Packet ACKNum" << Packet.ackNum << 
@@ -259,7 +276,6 @@ int main(int argc, char* argv[])
 
 									cout << "Packet" << Packet.seqNum << " received" << endl;
 									cout << "Packet type is " << Packet.type << endl;
-									cout << "Packet payload is " << Packet.payload << endl;
 									if (bytes_received != -1) {
 										//file transfer complete
 										if (Packet.type == TRANSFER_COMPLETE_ACK)

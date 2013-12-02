@@ -59,7 +59,6 @@ int main(int argc, char* argv[])
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(portnum);
 
-	cout << "Port number is " << serv_addr.sin_port << endl;
 	cout << "Locating " << host << "..." << endl;
 	hp = gethostbyname(host);
 	if (!hp) {
@@ -143,37 +142,6 @@ int main(int argc, char* argv[])
 								//inform packet corruption
 								cout << "Corruption detected in packet " <<
 									Packet.seqNum << endl;
-								
-								//send ACK when the first unacked pkt in the CW was corrupted
-								/* if (exp_pktNum == Packet.seqNum)
-								{
-									if (Packet.seqNum == 0) {
-										Packet.seqNum = maxSeqNum;
-									}
-									Packet.ackNum = Packet.seqNum - 1;
-									Packet.type = ACK;
-									Packet.seqNum = -1;
-                                	memset(&Packet.payload, 0, sizeof(Packet.payload));
-                                	status = udpsend(fd,(void*)&Packet, headSize, 0, 
-		  									(struct sockaddr*)&serv_addr, slen, Pl, Pc);
-                                	if (status != -1)
-                               	 	{
-                                    	cout << "sending ACK" << Packet.ackNum << 
-                                    	", first pkt corruption" << endl;
-                                	}
-								} else {
-									cout << "Current ackNum: " << pkt_ackNum << endl;
-									Packet.ackNum = pkt_ackNum;
-									Packet.seqNum = -1;
-                                	memset(&Packet.payload, 0, sizeof(Packet.payload));
-                                	status = udpsend(fd,(void*)&Packet, headSize, 0, 
-		  									(struct sockaddr*)&serv_addr, slen, Pl, Pc);
-                                	if (status != -1)
-                               	 	{
-                                    	cout << "sending ACK" << Packet.ackNum << 
-                                    	", not the first pkt corrupt" << endl;
-                                	}
-								} */
 							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
 								cout << "Current seqNum" << Packet.seqNum << endl;
