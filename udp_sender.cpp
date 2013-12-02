@@ -131,6 +131,14 @@ int main(int argc, char* argv[])
 					fin_sizepos.seekg(beg); // resets stream pointer to the beginning
 					/************ finish to caculate the filesize*********/
 
+					for(int x = 0; x < maxSeqNum; x++) {
+						if ((x != (pktsPerWnd - 1)) ||
+							(x != (maxSeqNum - 1))) {
+							tran_DataSize[x] = DATASIZE;
+						} else {
+							tran_DataSize[x] = CWnd % DATASIZE;
+						}
+					}
 
 					while(cumAckPointer < fsize) {
 					   	// select setup
@@ -147,8 +155,10 @@ int main(int argc, char* argv[])
 							Packet.type = FILE_DATA;
 							Packet.ackNum = -1;
 							pkt_seqNum++;
-							Packet.seqNum = pkt_seqNum % maxSeqNum;
-							if ( CW_unused < DATASIZE )
+							pkt_seqNum = pkt_seqNum % maxSeqNum;
+							Packet.seqNum = pkt_seqNum;
+							
+							/*if ( CW_unused < DATASIZE )
 							{
 								fin.read(Packet.payload, CW_unused);
 								tran_DataSize[Packet.seqNum] = CW_unused;
@@ -161,7 +171,7 @@ int main(int argc, char* argv[])
 								CW_unused -= DATASIZE;
 								cout << "DATAFile pointer is " << fin.tellg() << endl;
 								cout << "cumAckPointer is " << cumAckPointer << endl;
-							}
+							}*/
 							
 							count = fin.gcount();
 							if (count > 0) {
@@ -184,7 +194,6 @@ int main(int argc, char* argv[])
 							cout << "Current ACK received: " << Packet.ackNum << endl;
 							if (Packet.type == ACK) {
 								//successfully receive the right ack, move the CW
-								ACKupto = Packet.ackNum;
 								if (Packet.ackNum == expect_ackNum) {
 									cout << "ACK" << expect_ackNum << " received" << endl;
 									if (!fin.eof()) {
@@ -195,7 +204,7 @@ int main(int argc, char* argv[])
 									cumAckPointer += tran_DataSize[Packet.ackNum];
 									// restart the timer
 									// continue;
-								} else if ((Packet.ackNum < (expect_ackNum + pktsPerWnd)) &&
+								} /*else if ((Packet.ackNum < (expect_ackNum + pktsPerWnd)) &&
 											(Packet.ackNum > (expect_ackNum))) {
 									// Looking for in-bounds ACK
 									cout << "ACK" << Packet.ackNum << " received," <<
@@ -245,7 +254,7 @@ int main(int argc, char* argv[])
 									expect_ackNum = Packet.ackNum;
 									expect_ackNum++;
 									expect_ackNum = expect_ackNum % maxSeqNum;
-								} else {
+								} */ else {
 									cout << "Expected ACK" << expect_ackNum << 
 										", received ACK" << Packet.ackNum << 
 										", out of bounds" << endl << endl;									
@@ -267,8 +276,8 @@ int main(int argc, char* argv[])
 							* since the first unacked packet*/
 							CW_unused = CWnd;
 							//reset the seqNum
-							cout << "Resetting the SEQnum to: " << ACKupto << endl;
-							pkt_seqNum = ACKupto;
+							cout << "Resetting the SEQnum to: " << expect_ackNum - 1 << endl;
+							pkt_seqNum = expect_ackNum - 1;
 							//modify the file pointer to the send_base
 							if (fin.eof()) {
 								fin.clear();
