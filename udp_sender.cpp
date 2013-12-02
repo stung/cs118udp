@@ -144,8 +144,7 @@ int main(int argc, char* argv[])
 
 						while(CW_unused > 0) {
 							memset(&Packet.payload, 0, sizeof(Packet.payload));
-							pkt_seqNum++;
-							Packet.seqNum = pkt_seqNum % maxSeqNum;
+
 							Packet.type = FILE_DATA;
 							if ( CW_unused < DATASIZE )
 							{
@@ -161,11 +160,15 @@ int main(int argc, char* argv[])
 							}
 							
 							count = fin.gcount();
-							Packet.ackNum = -1;
-							udpsend(fd, (void*)&Packet, count + headSize, 0,
-			 	 				(struct sockaddr*)&cli_addr, slen, Pl, Pc);
-							cout << "Sending data amount: " << count << endl;
-							cout << "Sending Pkt SeqNum" << Packet.seqNum << endl << endl;
+							if (count > 0) {
+								Packet.ackNum = -1;
+								pkt_seqNum++;
+								Packet.seqNum = pkt_seqNum % maxSeqNum;
+								udpsend(fd, (void*)&Packet, count + headSize, 0,
+				 	 				(struct sockaddr*)&cli_addr, slen, Pl, Pc);
+								cout << "Sending data amount: " << count << endl;
+								cout << "Sending Pkt SeqNum" << Packet.seqNum << endl << endl;
+							}
 						}
 
 						//receive ack 
@@ -207,12 +210,19 @@ int main(int argc, char* argv[])
 									cout << "ACK" << Packet.ackNum << " received," <<
 										" expected packet" << expect_ackNum <<
 										", still within bounds" << endl << endl;
-									for (int i = expect_ackNum; i < maxSeqNum; i++) {
-										cumAckPointer += tran_DataSize[i];
+									if (Packet.ackNum < (expect_ackNum - pktsPerWnd)) {
+										for (int i = expect_ackNum; i < maxSeqNum; i++) {
+											cumAckPointer += tran_DataSize[i];
+										}
+										for (int j = 0; j <= Packet.ackNum; j++) {
+											cumAckPointer += tran_DataSize[j];
+										}
+									} else {
+										for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
+											cumAckPointer += tran_DataSize[i];
+										}
 									}
-									for (int j = 0; j < (expect_ackNum - pktsPerWnd); j++) {
-										cumAckPointer += tran_DataSize[j];
-									}
+									
 									expect_ackNum = Packet.ackNum;
 									expect_ackNum++;
 									expect_ackNum = expect_ackNum % maxSeqNum;
@@ -287,13 +297,11 @@ int main(int argc, char* argv[])
 
 									cout << "Packet" << Packet.seqNum << " received" << endl;
 									cout << "Packet type is " << Packet.type << endl;
-									if (bytes_received != -1) {
-										//file transfer complete
-										if (Packet.type == TRANSFER_COMPLETE_ACK)
-										{
-											cout << "The file transfer is completed!" << endl;
-											break;
-										}
+									//file transfer complete
+									if (Packet.type == TRANSFER_COMPLETE_ACK)
+									{
+										cout << "The file transfer is completed!" << endl;
+										break;
 									}
 								}
 							} else {
