@@ -38,14 +38,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
    	
-   	// select setup
-   	int select_status;
-   	fd_set readset;
-   	FD_ZERO(&readset);
-   	FD_SET(fd, &readset);
-   	struct timeval timeout;
-   	timeout.tv_sec = 0;
-   	timeout.tv_usec = 20000; // in microseconds
+
 
 	cout << "Binding socket..." << endl;
 	/* 
@@ -102,6 +95,7 @@ int main(int argc, char* argv[])
 					int CWnd = strtol(argv[2], NULL, 10);
 					int CW_unused = CWnd;
 					int expect_ackNum = 0;
+					int ACKupto = -1;
 					int pkt_seqNum = -1;
 					streampos cumAckPointer;
 
@@ -139,6 +133,15 @@ int main(int argc, char* argv[])
 
 
 					while(cumAckPointer < fsize) {
+					   	// select setup
+					   	int select_status;
+					   	fd_set readset;
+					   	FD_ZERO(&readset);
+					   	FD_SET(fd, &readset);
+					   	struct timeval timeout;
+					   	timeout.tv_sec = 0;
+					   	timeout.tv_usec = 20000; // in microseconds
+
 						while(CW_unused > 0) {
 							memset(&Packet.payload, 0, sizeof(Packet.payload));
 							pkt_seqNum++;
@@ -174,8 +177,8 @@ int main(int argc, char* argv[])
 							cout << "Current ACK received: " << Packet.ackNum << endl;
 							if (Packet.type == ACK) {
 								//successfully receive the right ack, move the CW
-								if (Packet.ackNum == expect_ackNum)
-								{
+								ACKupto = Packet.ackNum;
+								if (Packet.ackNum == expect_ackNum) {
 									cout << "ACK" << expect_ackNum << " received" << endl;
 									if (!fin.eof()) {
 										CW_unused += tran_DataSize[Packet.ackNum];
@@ -189,25 +192,6 @@ int main(int argc, char* argv[])
 									cout << "Expected ACK" << expect_ackNum << 
 										", received ACK" << Packet.ackNum << endl;									
 								}
-								 /*else {
-									cout << "Expected ACK" << expect_ackNum << 
-									", received ACK" << Packet.ackNum << endl;
-									//reset the CW_unused to retransmit all packets
-									// since the first unacked packet
-									CW_unused = CWnd;
-									//reset the seqNum
-									pkt_seqNum = Packet.ackNum;
-									//modify the file pointer to the send_base
-									if (fin.eof()) {
-										fin.clear();
-										fin.seekg(0, ios::beg);
-										cout << "Is EOF set? " << fin.eof() << endl;
-										cout << "Reset the EOF bit" << endl;
-									}
-									fin.seekg(cumAckPointer);
-									cout << "cumAckPointer is " << cumAckPointer << endl;
-									cout << "ACKRstFile pointer is " << fin.tellg() << endl;
-								} */
 							} else if (Packet.type == FILE_CORRUPTION) {
 								cout << "Packet ACKNum" << Packet.ackNum << 
 								" is corrupted!" << endl;
@@ -225,7 +209,8 @@ int main(int argc, char* argv[])
 							* since the first unacked packet*/
 							CW_unused = CWnd;
 							//reset the seqNum
-							pkt_seqNum = Packet.ackNum;
+							cout << "Resetting the SEQnum to: " << ACKupto << endl;
+							pkt_seqNum = ACKupto;
 							//modify the file pointer to the send_base
 							if (fin.eof()) {
 								fin.clear();
@@ -241,8 +226,17 @@ int main(int argc, char* argv[])
 
 					fin.close();
 					fin_sizepos.close();
-					//file transfer complete
+					// FILE TRANSFER COMPLETE
 					while(1) {
+						// select setup
+					   	int select_finalstatus;
+					   	fd_set finalreadset;
+					   	FD_ZERO(&finalreadset);
+					   	FD_SET(fd, &finalreadset);
+					   	struct timeval finaltimeout;
+					   	finaltimeout.tv_sec = 0;
+					   	finaltimeout.tv_usec = 20000; // in microseconds
+
 						Packet.type = FILE_TRANSFER_COMPLETE;
 						char msg [] = "The file transfer is completed!";
 						memset(&Packet.payload, 0, sizeof(Packet.payload));
@@ -255,23 +249,28 @@ int main(int argc, char* argv[])
 						cout << "Waiting for transfer complete ACK" << endl;
 
 						if(sock_status != -1 ) {
-							//check ack
-							select_status = select(fd + 1, &readset, NULL, NULL, &timeout);
-							if (FD_ISSET(fd, &readset)) {
+							select_finalstatus = select(fd + 1, &finalreadset, NULL, NULL, &finaltimeout);
+							if (FD_ISSET(fd, &finalreadset)) {
+								//check ack
 								bytes_received = udprecv(fd, (void*)&Packet,
-						 			packetSize, 0, (struct sockaddr*)&server_addr,
-									&slen, Pl, Pc);
-								cout << "Packet" << Packet.seqNum << " received" << endl;
-								cout << "Packet type is " << Packet.type << endl;
-								cout << "Packet payload is " << Packet.payload << endl;
+							 			packetSize, 0, (struct sockaddr*)&server_addr,
+										&slen, Pl, Pc);
 								if (bytes_received != -1) {
-									//file transfer complete
-									if (Packet.type == TRANSFER_COMPLETE_ACK)
-									{
-										cout << "The file transfer is completed!" << endl;
-										break;
+
+									cout << "Packet" << Packet.seqNum << " received" << endl;
+									cout << "Packet type is " << Packet.type << endl;
+									cout << "Packet payload is " << Packet.payload << endl;
+									if (bytes_received != -1) {
+										//file transfer complete
+										if (Packet.type == TRANSFER_COMPLETE_ACK)
+										{
+											cout << "The file transfer is completed!" << endl;
+											break;
+										}
 									}
 								}
+							} else {
+								cout << "Final transfer complete ACK timeout!" << endl;
 							}	
 						}
 					}
