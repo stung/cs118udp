@@ -201,9 +201,11 @@ int main(int argc, char* argv[])
 									cout << "ACK" << Packet.ackNum << " received," <<
 										" expected packet" << expect_ackNum <<
 										", still within bounds" << endl << endl;
-									if (1) { //!fin.eof()) {
+									if (!fin.eof()) {
 										for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
-											cumAckPointer += tran_DataSize[i];
+											if (cumAckPointer < fsize) {
+												cumAckPointer += tran_DataSize[i];
+											}
 											cout << "cumAckPointer is " << cumAckPointer << endl;
 										}
 									}
@@ -217,19 +219,25 @@ int main(int argc, char* argv[])
 									cout << "ACK" << Packet.ackNum << " received," <<
 										" expected packet" << expect_ackNum <<
 										", still within bounds" << endl << endl;
-									if (1) { //!fin.eof()) {
+									if (!fin.eof()) {
 										if (Packet.ackNum < (expect_ackNum - pktsPerWnd)) {
 											for (int i = expect_ackNum; i < maxSeqNum; i++) {
-												cumAckPointer += tran_DataSize[i];
+												if (cumAckPointer < fsize) {
+													cumAckPointer += tran_DataSize[i];
+												}
 												cout << "cumAckPointer is " << cumAckPointer << endl;
 											}
 											for (int j = 0; j <= Packet.ackNum; j++) {
-												cumAckPointer += tran_DataSize[j];
+												if (cumAckPointer < fsize) {
+													cumAckPointer += tran_DataSize[j];
+												}
 												cout << "cumAckPointer is " << cumAckPointer << endl;
 											}
 										} else {
 											for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
-												cumAckPointer += tran_DataSize[i];
+												if (cumAckPointer < fsize) {
+													cumAckPointer += tran_DataSize[i];
+												}
 												cout << "cumAckPointer is " << cumAckPointer << endl;
 											}
 										}
