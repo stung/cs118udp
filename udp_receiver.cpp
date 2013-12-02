@@ -131,8 +131,8 @@ int main(int argc, char* argv[])
 								//send ACK
 								Packet.type = TRANSFER_COMPLETE_ACK;
                             	memset(&Packet.payload, 0, sizeof(Packet.payload));
-                            	Packet.seqNum = -1;
-                            	Packet.ackNum = -1;
+                            	Packet.seqNum = -2; // invalid seqNum
+                            	Packet.ackNum = -2; // invalid ackNum
                             	status = udpsend(fd,(void*)&Packet, headSize, 0, 
 		  								(struct sockaddr*)&serv_addr, slen, 0, 0);
                                 if (status != -1)
@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
 								//send ACK 
 								Packet.type = ACK;
 								Packet.ackNum = pkt_ackNum;
-								Packet.seqNum = -1;
+								Packet.seqNum = -2; // invalid seqNum
 								memset(&Packet.payload, 0, sizeof(Packet.payload));
 
 								status = udpsend(fd, (void*)&Packet, headSize, 0, 
