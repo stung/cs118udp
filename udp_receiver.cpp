@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 							} else if (Packet.type == FILE_CORRUPTION) { //file corruption
 								//inform packet corruption
 								cout << "Corruption detected in packet " <<
-									Packet.seqNum << endl;
+									Packet.seqNum << endl << endl;
 							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
 								cout << "Current seqNum" << Packet.seqNum << endl;
@@ -149,18 +149,18 @@ int main(int argc, char* argv[])
 									//writing data
 									newfile.write(Packet.payload, bytes_received - headSize);
 									cout << "writing " << bytes_received - headSize
-									<< " bytes into file" << endl;
+									<< " bytes into file" << endl << endl;
 									exp_pktNum++;
 									pkt_ackNum++;
 									pkt_ackNum = pkt_ackNum % maxSeqNum;
 									exp_pktNum = exp_pktNum % maxSeqNum;
 									memset(&Packet.payload, 0, sizeof(Packet.payload));
 									cout << "Packet" << Packet.seqNum << " written, " <<
-									"expecting packet" << exp_pktNum << " next" << endl;
+									"expecting packet" << exp_pktNum << " next" << endl << endl;
 								} else {
 									//inform packet loss
 									cout << "Expected packet" << exp_pktNum << 
-									", packet" << Packet.seqNum << " dropped" << endl;
+									", packet" << Packet.seqNum << " dropped" << endl << endl;
 								}
 
 								//send ACK 
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc);
                                 if (status != -1)
                                 {
-                                    cout << "sending ACK" << Packet.ackNum << endl;
+                                    cout << "sending ACK" << Packet.ackNum << endl << endl;
                                 }
 							}
 						}  

@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 							udpsend(fd, (void*)&Packet, count + headSize, 0,
 			 	 				(struct sockaddr*)&cli_addr, slen, Pl, Pc);
 							cout << "Sending data amount: " << count << endl;
-							cout << "Sending Pkt SeqNum" << Packet.seqNum << endl;
+							cout << "Sending Pkt SeqNum" << Packet.seqNum << endl << endl;
 						}
 
 						//receive ack 
@@ -190,29 +190,40 @@ int main(int argc, char* argv[])
 									// continue;
 								} else if ((Packet.ackNum < (expect_ackNum + pktsPerWnd)) &&
 											(Packet.ackNum > (expect_ackNum))) {
+									// Looking for in-bounds ACK
 									cout << "ACK" << Packet.ackNum << " received," <<
 										" expected packet" << expect_ackNum <<
-										", still within bounds" << endl;
+										", still within bounds" << endl << endl;
+									for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
+										cumAckPointer += tran_DataSize[i];
+									}
 									expect_ackNum = Packet.ackNum;
 									expect_ackNum++;
-
+									expect_ackNum = expect_ackNum % maxSeqNum;
 								} else if ((expect_ackNum > pktsPerWnd) &&
 											((Packet.ackNum < (expect_ackNum - pktsPerWnd)) || 
 											(Packet.ackNum > (expect_ackNum + pktsPerWnd)))) {
+									// Looking for in-bounds ACK
 									cout << "ACK" << Packet.ackNum << " received," <<
 										" expected packet" << expect_ackNum <<
-										", still within bounds" << endl;
+										", still within bounds" << endl << endl;
+									for (int i = expect_ackNum; i < maxSeqNum; i++) {
+										cumAckPointer += tran_DataSize[i];
+									}
+									for (int j = 0; j < (expect_ackNum - pktsPerWnd); j++) {
+										cumAckPointer += tran_DataSize[j];
+									}
 									expect_ackNum = Packet.ackNum;
 									expect_ackNum++;
-
+									expect_ackNum = expect_ackNum % maxSeqNum;
 								} else {
 									cout << "Expected ACK" << expect_ackNum << 
 										", received ACK" << Packet.ackNum << 
-										", out of bounds" << endl;									
+										", out of bounds" << endl << endl;									
 								}
 							} else if (Packet.type == FILE_CORRUPTION) {
 								cout << "Packet ACKNum" << Packet.ackNum << 
-								" is corrupted!" << endl;
+								" is corrupted!" << endl << endl;
 							}
 							
 							/*corruption or ack lost or not receive the right ackNum
@@ -237,7 +248,7 @@ int main(int argc, char* argv[])
 							}
 							fin.seekg(cumAckPointer);
 							cout << "cumAckPointer is " << cumAckPointer << endl;
-							cout << "ACKRstFile pointer is " << fin.tellg() << endl;
+							cout << "ACKRstFile pointer is " << fin.tellg() << endl << endl;
 						}
 					}
 
