@@ -48,13 +48,14 @@ int main(int argc, char* argv[])
 	htonl converts long to network rep (address/port #)
 	*/
 
-	short portnum = strtol(argv[1], NULL, 10);
+	short portnum = (short)strtol(argv[1], NULL, 10);
 
 	memset((char *)&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	server_addr.sin_port = htons(portnum);
 
+	cout << "Binding to " << (short)server_addr.sin_port << endl;
 	if (bind(fd, (struct sockaddr *)&server_addr,
 			sizeof(server_addr)) < 0) {
 		cerr << "Failed to bind to " << portnum << endl;
@@ -215,8 +216,7 @@ int main(int argc, char* argv[])
 							if (fin.eof()) {
 								fin.clear();
 								fin.seekg(0, ios::beg);
-								cout << "Is EOF set? " << fin.eof() << endl;
-								cout << "Reset the EOF bit" << endl;
+								cout << "Resetting the EOF bit" << endl;
 							}
 							fin.seekg(cumAckPointer);
 							cout << "cumAckPointer is " << cumAckPointer << endl;

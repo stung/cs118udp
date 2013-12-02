@@ -46,7 +46,6 @@ int main(int argc, char* argv[])
 
 	char* host = argv[1];
 	short portnum = strtol(argv[2], NULL, 10);
-	// strncpy(host, argv[1], sizeof(host)); 
 	cout << "Creating socket..." << endl;
 
 	// Create a socket
@@ -60,6 +59,7 @@ int main(int argc, char* argv[])
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(portnum);
 
+	cout << "Port number is " << serv_addr.sin_port << endl;
 	cout << "Locating " << host << "..." << endl;
 	hp = gethostbyname(host);
 	if (!hp) {

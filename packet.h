@@ -58,11 +58,15 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 		Packet.type = FILE_CORRUPTION;
 	}
 	if (isLost) {
-		std::cout << "Packet lost!" << std::endl;
+		std::cout << "Packet seqNum" << Packet.seqNum <<
+		"/" << "ackNum" << Packet.ackNum <<
+		" lost!" << std::endl;
+		return 1;
+	} else {
+		int status = sendto(sockfd, msg, len, flags, to, tolen);
+		memset(&Packet.payload, 0, sizeof(Packet.payload));
+		return status;
 	}
-	int status = sendto(sockfd, msg, len, flags, to, tolen);
-	memset(&Packet.payload, 0, sizeof(Packet.payload));
-	return status;
 }
 
 int udprecv(int sockfd, void *buf, int len, unsigned int flags,
