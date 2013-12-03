@@ -135,11 +135,18 @@ int main(int argc, char* argv[])
 
 					// Calculating the packet size for each seq num
 					for(int x = 0; x < maxSeqNum; x++) {
-						if ((x != (pktsPerWnd - 1)) ||
+						if ((x != (pktsPerWnd - 1)) &&
 							(x != (maxSeqNum - 1))) {
 							tran_DataSize[x] = DATASIZE;
+							if (DEBUG) {
+								cout << "x is " << tran_DataSize[x] << endl;
+							}
 						} else {
 							tran_DataSize[x] = CWnd % DATASIZE;
+							if (DEBUG) {
+								cout << "CWnd is " << CWnd << endl;
+								cout << "x is small " << tran_DataSize[x] << endl;
+							}
 						}
 					}
 
