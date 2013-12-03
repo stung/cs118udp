@@ -35,11 +35,12 @@ struct PACKET{
 	int seqNum;
 	int ackNum;
 	int maxSeqNum;
+	unsigned int byteSeqNum;
 	char payload[DATASIZE]; 
-	PACKET() : type(NONE), seqNum(-1), ackNum(-1), maxSeqNum(0){}
+	PACKET() : type(NONE), seqNum(-1), ackNum(-1), maxSeqNum(0), byteSeqNum(0){}
 };
 
-const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 3;
+const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 3 + sizeof(unsigned int);
 const int packetSize = headSize + DATASIZE;
 PACKET Packet;
 

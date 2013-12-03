@@ -131,6 +131,7 @@ int main(int argc, char* argv[])
 					fin_sizepos.seekg(beg); // resets stream pointer to the beginning
 					/************ finish to caculate the filesize*********/
 
+					// Calculating the packet size for each seq num
 					for(int x = 0; x < maxSeqNum; x++) {
 						if ((x != (pktsPerWnd - 1)) ||
 							(x != (maxSeqNum - 1))) {
@@ -186,6 +187,8 @@ int main(int argc, char* argv[])
 				 	 				(struct sockaddr*)&cli_addr, slen, Pl, Pc);
 								cout << "Sending data amount: " << count << endl;
 								cout << "Sending Pkt SeqNum" << Packet.seqNum << endl << endl;
+								cout << "SEQNUM IS AT BYTE " << fin.tellg() << endl;
+								cout << "ExpACKNum is at byte " << cumAckPointer << endl << endl;;
 							} else {
 								cout << "No more characters to read in the file" << endl << endl;
 							}
@@ -287,6 +290,8 @@ int main(int argc, char* argv[])
 								" is corrupted!" << endl;
 								cout << "CORRUPTION DETECTED, DROPPING PACKET----------------" << 
 									endl << endl;
+								cout << "SEQNUM IS AT BYTE " << fin.tellg() << endl;
+								cout << "ExpACKNum is at byte " << cumAckPointer << endl << endl;;
 							}
 							
 							/*corruption or ack lost or not receive the right ackNum
@@ -320,8 +325,8 @@ int main(int argc, char* argv[])
 								cout << "ACKRstFile pointer is " << fin.tellg() << endl << endl;
 							}
 						}
-						cout << "FILE READ TO BYTE " << fin.tellg() << endl;
-						cout << "cumAckPointer is " << cumAckPointer << endl << endl;;
+						cout << "SEQNUM IS AT BYTE " << fin.tellg() << endl;
+						cout << "ExpACKNum is at byte " << cumAckPointer << endl << endl;;
 					}
 
 					fin.close();
@@ -334,8 +339,8 @@ int main(int argc, char* argv[])
 					   	FD_ZERO(&finalreadset);
 					   	FD_SET(fd, &finalreadset);
 					   	struct timeval finaltimeout;
-					   	finaltimeout.tv_sec = 0;
-					   	finaltimeout.tv_usec = 20000; // in microseconds
+					   	finaltimeout.tv_sec = 3;
+					   	finaltimeout.tv_usec = 0; // in microseconds
 
 						Packet.type = FILE_TRANSFER_COMPLETE;
 						char msg [] = "The file transfer is completed!";
