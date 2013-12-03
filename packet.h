@@ -54,19 +54,40 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 	bool isLost = (lossProb < Pl);
 
 	if (isCorr && !isLost) {
-		std::cout << "Packet seqNum" << Packet.byteSeqNum <<
-		"/" << "ackNum" << Packet.byteAckNum <<
-		" now corrupted!" << std::endl;
+		if ((Packet.seqNum == -2) && (Packet.ackNum != -2)) {
+			std::cout << "Packet ackNum" << Packet.ackNum <<
+				" now corrupted!" << std::endl;
+		} else if ((Packet.seqNum != -2) && (Packet.ackNum == -2)) {
+			std::cout << "Packet seqNum" << Packet.byteSeqNum <<
+				" now corrupted!" << std::endl;
+		} else {
+			std::cout << "Non-DATA/ACK Packet" <<
+				" now corrupted!" << std::endl;
+		}
 		Packet.type = FILE_CORRUPTION;
 	} else if (isLost) {
-		std::cout << "Packet seqNum" << Packet.byteSeqNum <<
-		"/" << "ackNum" << Packet.byteAckNum <<
-		" lost!" << std::endl;
-		return 1;
+		if ((Packet.seqNum == -2) && (Packet.ackNum != -2)) {
+			std::cout << "Packet ackNum" << Packet.ackNum <<
+				" now lost!" << std::endl;
+		} else if ((Packet.seqNum != -2) && (Packet.ackNum == -2)) {
+			std::cout << "Packet seqNum" << Packet.byteSeqNum <<
+				" now lost!" << std::endl;
+		} else {
+			std::cout << "Non-DATA/ACK Packet" <<
+				" now lost!" << std::endl;
+		}
+		return 0;
 	} else {
-		std::cout << "Successful send Packet seqNum" <<
-		Packet.byteSeqNum << "/" << "ackNum" << 
-		Packet.byteAckNum << std::endl;
+		if ((Packet.seqNum == -2) && (Packet.ackNum != -2)) {
+			std::cout << "Successfully sent Packet ackNum" <<
+				Packet.ackNum << std::endl;
+		} else if ((Packet.seqNum != -2) && (Packet.ackNum == -2)) {
+			std::cout << "Successfully sent Packet seqNum" <<
+				Packet.byteSeqNum << std::endl;
+		} else {
+			std::cout << "Successfully sent non-DATA/ACK Packet!" <<
+				std::endl;
+		}
 	} 
 	int status = sendto(sockfd, msg, len, flags, to, tolen);
 	memset(&Packet, 0, sizeof(Packet));
