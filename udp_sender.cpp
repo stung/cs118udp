@@ -222,7 +222,7 @@ int main(int argc, char* argv[])
                                     cout << "ACK" << Packet.ackNum << " received," <<
                                         " expected packet" << expect_ackNum <<
                                         ", still within bounds" << endl << endl;
-                                    if (!fin.eof()) {
+                                    if (1) { //!fin.eof()) {
                                         for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
                                             if (cumAckPointer < fsize) {
                                                 cumAckPointer += tran_DataSize[i];
@@ -243,7 +243,7 @@ int main(int argc, char* argv[])
                                     cout << "ACK" << Packet.ackNum << " received," <<
                                         " expected packet" << expect_ackNum <<
                                         ", still within bounds" << endl << endl;
-                                    if (!fin.eof()) {
+                                    if (1) { //!fin.eof()) {
                                         if (Packet.ackNum < (expect_ackNum - pktsPerWnd)) {
                                             for (int i = expect_ackNum; i < maxSeqNum; i++) {
                                                 if (cumAckPointer < fsize) {
@@ -339,13 +339,8 @@ int main(int argc, char* argv[])
 					   	FD_ZERO(&finalreadset);
 					   	FD_SET(fd, &finalreadset);
 					   	struct timeval finaltimeout;
-<<<<<<< HEAD
 					   	finaltimeout.tv_sec = 0;
 					   	finaltimeout.tv_usec = 50000; // in microseconds
-=======
-					   	finaltimeout.tv_sec = 3;
-					   	finaltimeout.tv_usec = 0; // in microseconds
->>>>>>> master
 
 						Packet.type = FILE_TRANSFER_COMPLETE;
 						char msg [] = "The file transfer is completed!";
