@@ -74,7 +74,8 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 int udprecv(int sockfd, void *buf, int len, unsigned int flags,
 				struct sockaddr *from, socklen_t *fromlen,
 				float Pl, float Pc) {
-
+	
+	memset(&Packet.payload, 0, sizeof(Packet.payload));
 	int status = recvfrom(sockfd, buf, len, flags, from, fromlen);
 	return status;
 }
