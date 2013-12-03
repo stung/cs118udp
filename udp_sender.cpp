@@ -183,6 +183,7 @@ int main(int argc, char* argv[])
 									"-----------------------" << endl << Packet.payload << 
 									endl << "-------------------------------------------------" << endl;
 								}
+								Packet.byteSeqNum = cumAckPointer;
 								udpsend(fd, (void*)&Packet, count + headSize, 0,
 				 	 				(struct sockaddr*)&cli_addr, slen, Pl, Pc);
 								cout << "Sending data amount: " << count << endl;

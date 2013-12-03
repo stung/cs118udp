@@ -68,7 +68,7 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 		Packet.ackNum << std::endl;
 	} 
 	int status = sendto(sockfd, msg, len, flags, to, tolen);
-	memset(&Packet.payload, 0, sizeof(Packet.payload));
+	memset(&Packet, 0, sizeof(Packet));
 	return status;
 }
 
@@ -76,7 +76,7 @@ int udprecv(int sockfd, void *buf, int len, unsigned int flags,
 				struct sockaddr *from, socklen_t *fromlen,
 				float Pl, float Pc) {
 	
-	memset(&Packet.payload, 0, sizeof(Packet.payload));
+	memset(&Packet, 0, sizeof(Packet));
 	int status = recvfrom(sockfd, buf, len, flags, from, fromlen);
 	return status;
 }

@@ -96,6 +96,7 @@ int main(int argc, char* argv[])
 	int exp_pktNum = 0;
 	int pkt_ackNum = -1;
 	int status = 0;
+	unsigned int ACKNumB = 0;
 
 	if (udpsend(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
 		  (struct sockaddr*)&serv_addr, slen, 0, 0) != -1)
@@ -144,7 +145,8 @@ int main(int argc, char* argv[])
 								cout << "Corruption detected in packet " <<
 									Packet.seqNum << endl;
 								cout << "CORRUPTION DETECTED, DROPPING PACKET----------------" << 
-									endl << endl;
+									endl;
+								cout << "ACKNUM IS AT BYTE " << ACKNumB << endl << endl; 
 							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
 								if (DEBUG) {
@@ -161,11 +163,14 @@ int main(int argc, char* argv[])
 									exp_pktNum = exp_pktNum % maxSeqNum;
 									memset(&Packet.payload, 0, sizeof(Packet.payload));
 									cout << "Packet" << Packet.seqNum << " written, " <<
-									"expecting packet" << exp_pktNum << " next" << endl << endl;
+									"expecting packet" << exp_pktNum << " next" << endl;
+									ACKNumB = Packet.byteSeqNum;
+									cout << "ACKNUM IS AT BYTE " << ACKNumB << endl << endl; 
 								} else {
 									//inform packet loss
 									cout << "Expected packet" << exp_pktNum << 
-									", packet" << Packet.seqNum << " dropped" << endl << endl;
+									", packet" << Packet.seqNum << " dropped" << endl;
+									cout << "ACKNUM IS AT BYTE " << ACKNumB << endl << endl; 
 								}
 
 								//send ACK 
