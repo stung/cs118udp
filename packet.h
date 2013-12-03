@@ -35,11 +35,12 @@ struct PACKET{
 	int seqNum;
 	int ackNum;
 	int maxSeqNum;
+	unsigned int byteSeqNum;
 	char payload[DATASIZE]; 
-	PACKET() : type(NONE), seqNum(-1), ackNum(-1), maxSeqNum(0){}
+	PACKET() : type(NONE), seqNum(-1), ackNum(-1), maxSeqNum(0), byteSeqNum(0){}
 };
 
-const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 3;
+const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 3 + sizeof(unsigned int);
 const int packetSize = headSize + DATASIZE;
 PACKET Packet;
 
@@ -74,7 +75,8 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 int udprecv(int sockfd, void *buf, int len, unsigned int flags,
 				struct sockaddr *from, socklen_t *fromlen,
 				float Pl, float Pc) {
-
+	
+	memset(&Packet.payload, 0, sizeof(Packet.payload));
 	int status = recvfrom(sockfd, buf, len, flags, from, fromlen);
 	return status;
 }
