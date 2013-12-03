@@ -238,13 +238,15 @@ int main(int argc, char* argv[])
 	                                        ", still within bounds" << endl << endl;
                                     }
 	                                    cout << "ACK" << Packet.byteAckNum << " received" << endl << endl;
-                                    if (1) { //!fin.eof()) {
+                                    if (cumAckPointer < fsize) {
                                         for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
                                             if (cumAckPointer < fsize) {
                                                 cumAckPointer += tran_DataSize[i];
-                                            }
-                                            if (DEBUG) {
-	                                            cout << "cumAckPointer is " << cumAckPointer << endl;
+	                                            if (DEBUG) {
+		                                            cout << "cumAckPointer is " << cumAckPointer << endl;
+	                                            }
+                                            } else {
+                                            	break;
                                             }
                                         }
                                     }
@@ -262,32 +264,38 @@ int main(int argc, char* argv[])
 	                                        ", still within bounds" << endl << endl;
                                     }
 	                                    cout << "ACK" << Packet.byteAckNum << " received" << endl << endl;
-                                    if (1) { //!fin.eof()) {
+                                    if (cumAckPointer < fsize) {
                                         if (Packet.ackNum < (expect_ackNum - pktsPerWnd)) {
                                             for (int i = expect_ackNum; i < maxSeqNum; i++) {
                                                 if (cumAckPointer < fsize) {
                                                     cumAckPointer += tran_DataSize[i];
+	                                                if (DEBUG) {
+			                                            cout << "cumAckPointer is " << cumAckPointer << endl;
+	                                            	}
+                                                } else {
+                                                	break;
                                                 }
-                                                if (DEBUG) {
-		                                            cout << "cumAckPointer is " << cumAckPointer << endl;
-                                            	}
                                             }
                                             for (int j = 0; j <= Packet.ackNum; j++) {
                                                 if (cumAckPointer < fsize) {
                                                     cumAckPointer += tran_DataSize[j];
+	                                                if (DEBUG) {
+		                                                cout << "cumAckPointer is " << cumAckPointer << endl;
+	                                            	}
+                                                } else {
+                                                	break;
                                                 }
-                                                if (DEBUG) {
-	                                                cout << "cumAckPointer is " << cumAckPointer << endl;
-                                            	}
                                             }
                                         } else {
                                             for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
                                                 if (cumAckPointer < fsize) {
                                                     cumAckPointer += tran_DataSize[i];
+	                                                if (DEBUG) {
+		                                                cout << "cumAckPointer is " << cumAckPointer << endl;
+	                                            	}
+                                                } else {
+                                                	break;
                                                 }
-                                                if (DEBUG) {
-	                                                cout << "cumAckPointer is " << cumAckPointer << endl;
-                                            	}
                                             }
                                         }
                                     }
