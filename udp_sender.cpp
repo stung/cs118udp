@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "packet.h"
 #define BUFLEN 512
+#define DEBUG 0
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -139,15 +140,15 @@ int main(int argc, char* argv[])
 						}
 					}
 
+				   	struct timeval timeout;
+				   	timeout.tv_sec = 0;
+					timeout.tv_usec = 20000; // in microseconds
 					while(cumAckPointer < fsize) {
 					   	// select setup
 					   	int select_status;
 					   	fd_set readset;
 					   	FD_ZERO(&readset);
 					   	FD_SET(fd, &readset);
-					   	struct timeval timeout;
-					   	timeout.tv_sec = 0;
-					   	timeout.tv_usec = 20000; // in microseconds
 
 						while(CW_unused > 0) {
 							memset(&Packet.payload, 0, sizeof(Packet.payload));
@@ -158,13 +159,17 @@ int main(int argc, char* argv[])
 							{
 								fin.read(Packet.payload, tran_DataSize[Packet.seqNum]);
 								CW_unused = 0;
-								cout << "CWunFile pointer is " << fin.tellg() << endl;
-								cout << "cumAckPointer is " << cumAckPointer << endl;
+								if (DEBUG) {
+									cout << "CWunFile pointer is " << fin.tellg() << endl;
+									cout << "cumAckPointer is " << cumAckPointer << endl;
+								}
 							} else {
 								fin.read(Packet.payload, tran_DataSize[Packet.seqNum]);
 								CW_unused -= tran_DataSize[Packet.seqNum];
-								cout << "DATAFile pointer is " << fin.tellg() << endl;
-								cout << "cumAckPointer is " << cumAckPointer << endl;
+								if (DEBUG) {
+									cout << "DATAFile pointer is " << fin.tellg() << endl;
+									cout << "cumAckPointer is " << cumAckPointer << endl;
+								}
 							}
 							
 							count = fin.gcount();
@@ -172,9 +177,11 @@ int main(int argc, char* argv[])
 								Packet.ackNum = -2; // invalid ackNum
 								pkt_seqNum++;
 								pkt_seqNum = pkt_seqNum % maxSeqNum;
-								cout << "Write Payload is: -------------------" <<
-								"-----------------------" << endl << Packet.payload << 
-								endl << "-------------------------------------------------" << endl;
+								if (DEBUG) {
+									cout << "Write Payload is: -------------------" <<
+									"-----------------------" << endl << Packet.payload << 
+									endl << "-------------------------------------------------" << endl;
+								}
 								udpsend(fd, (void*)&Packet, count + headSize, 0,
 				 	 				(struct sockaddr*)&cli_addr, slen, Pl, Pc);
 								cout << "Sending data amount: " << count << endl;
@@ -190,7 +197,9 @@ int main(int argc, char* argv[])
 						if (FD_ISSET(fd, &readset)) {
 							bytes_received = udprecv(fd, (void*)&Packet, packetSize, 
 	        				  0, (struct sockaddr*)&cli_addr, &slen, Pl, Pc);
-							cout << "Current ACK received: " << Packet.ackNum << endl;
+							if (DEBUG) {
+								cout << "Current ACK received: " << Packet.ackNum << endl;
+							}
 							if (Packet.type == ACK) {
 								//successfully receive the right ack, move the CW
 								if (Packet.ackNum == expect_ackNum) {
@@ -201,6 +210,7 @@ int main(int argc, char* argv[])
 									expect_ackNum++;
 									expect_ackNum = expect_ackNum % maxSeqNum;
 									cumAckPointer += tran_DataSize[Packet.ackNum];
+									timeout.tv_usec = 20000;
 									// restart the timer
 									// continue;
 								} else if ((Packet.ackNum < (expect_ackNum + pktsPerWnd)) &&
@@ -209,17 +219,20 @@ int main(int argc, char* argv[])
                                     cout << "ACK" << Packet.ackNum << " received," <<
                                         " expected packet" << expect_ackNum <<
                                         ", still within bounds" << endl << endl;
-                                    if (1) { //!fin.eof()) {
+                                    if (!fin.eof()) {
                                         for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
                                             if (cumAckPointer < fsize) {
                                                 cumAckPointer += tran_DataSize[i];
                                             }
-                                            cout << "cumAckPointer is " << cumAckPointer << endl;
+                                            if (DEBUG) {
+	                                            cout << "cumAckPointer is " << cumAckPointer << endl;
+                                            }
                                         }
                                     }
                                     expect_ackNum = Packet.ackNum;
                                     expect_ackNum++;
                                     expect_ackNum = expect_ackNum % maxSeqNum;
+                                    timeout.tv_usec = 20000;
                                 } else if ((expect_ackNum > pktsPerWnd) &&
 	                                        ((Packet.ackNum < (expect_ackNum - pktsPerWnd)) || 
 	                                        (Packet.ackNum > (expect_ackNum + pktsPerWnd)))) {
@@ -227,32 +240,39 @@ int main(int argc, char* argv[])
                                     cout << "ACK" << Packet.ackNum << " received," <<
                                         " expected packet" << expect_ackNum <<
                                         ", still within bounds" << endl << endl;
-                                    if (1) { //!fin.eof()) {
+                                    if (!fin.eof()) {
                                         if (Packet.ackNum < (expect_ackNum - pktsPerWnd)) {
                                             for (int i = expect_ackNum; i < maxSeqNum; i++) {
                                                 if (cumAckPointer < fsize) {
                                                     cumAckPointer += tran_DataSize[i];
                                                 }
-	                                            cout << "cumAckPointer is " << cumAckPointer << endl;
+                                                if (DEBUG) {
+		                                            cout << "cumAckPointer is " << cumAckPointer << endl;
+                                            	}
                                             }
                                             for (int j = 0; j <= Packet.ackNum; j++) {
                                                 if (cumAckPointer < fsize) {
                                                     cumAckPointer += tran_DataSize[j];
                                                 }
-                                                cout << "cumAckPointer is " << cumAckPointer << endl;
+                                                if (DEBUG) {
+	                                                cout << "cumAckPointer is " << cumAckPointer << endl;
+                                            	}
                                             }
                                         } else {
                                             for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
                                                 if (cumAckPointer < fsize) {
                                                     cumAckPointer += tran_DataSize[i];
                                                 }
-                                                cout << "cumAckPointer is " << cumAckPointer << endl;
+                                                if (DEBUG) {
+	                                                cout << "cumAckPointer is " << cumAckPointer << endl;
+                                            	}
                                             }
                                         }
                                     }
                                     expect_ackNum = Packet.ackNum;
                                     expect_ackNum++;
                                     expect_ackNum = expect_ackNum % maxSeqNum;
+                                    timeout.tv_usec = 20000;
                                 } else {
 									// drops all ACKs outside of bounds,
 									// even if receiver is "buffered" by cumAck
@@ -260,9 +280,13 @@ int main(int argc, char* argv[])
 										", received ACK" << Packet.ackNum << 
 										", out of bounds" << endl << endl;									
 								}
+								cout << "ACK PACKET PROCESSED--------------------------------" <<
+									endl << endl;
 							} else if (Packet.type == FILE_CORRUPTION) {
 								cout << "Packet ACKNum" << Packet.ackNum << 
-								" is corrupted!" << endl << endl;
+								" is corrupted!" << endl;
+								cout << "CORRUPTION DETECTED, DROPPING PACKET----------------" << 
+									endl << endl;
 							}
 							
 							/*corruption or ack lost or not receive the right ackNum
@@ -271,7 +295,8 @@ int main(int argc, char* argv[])
 							* reset some parameter to implement the file retransfer
 							*/
 						} else {
-							cout << "Sender timed out!" << endl;
+							cout << "****************" << 
+								"Sender timed out!****************" << endl;
 	
 							/*reset the CW_unused to retransmit all packets
 							* since the first unacked packet*/
@@ -285,12 +310,18 @@ int main(int argc, char* argv[])
 							if (fin.eof()) {
 								fin.clear();
 								fin.seekg(0, ios::beg);
-								cout << "Resetting the EOF bit" << endl;
+								if (DEBUG) {
+									cout << "Resetting the EOF bit" << endl;
+								}
 							}
 							fin.seekg(cumAckPointer);
-							cout << "cumAckPointer is " << cumAckPointer << endl;
-							cout << "ACKRstFile pointer is " << fin.tellg() << endl << endl;
+							if (DEBUG) {	
+								cout << "cumAckPointer is " << cumAckPointer << endl;
+								cout << "ACKRstFile pointer is " << fin.tellg() << endl << endl;
+							}
 						}
+						cout << "FILE READ TO BYTE " << fin.tellg() << endl;
+						cout << "cumAckPointer is " << cumAckPointer << endl << endl;;
 					}
 
 					fin.close();

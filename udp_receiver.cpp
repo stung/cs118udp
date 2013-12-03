@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "packet.h"
 #define BUFLEN 512
+#define DEBUG 0
 using namespace std;
 
 // prints the IP address in dotted decimal
@@ -136,15 +137,19 @@ int main(int argc, char* argv[])
                             	status = udpsend(fd,(void*)&Packet, headSize, 0, 
 		  								(struct sockaddr*)&serv_addr, slen, 0, 0);
                                 if (status != -1)
-                                    cout << "sending transfer complete ACK" << endl;
+                                    cout << "Sending transfer complete ACK" << endl;
 								break;
 							} else if (Packet.type == FILE_CORRUPTION) { //file corruption
 								//inform packet corruption
 								cout << "Corruption detected in packet " <<
-									Packet.seqNum << endl << endl;
+									Packet.seqNum << endl;
+								cout << "CORRUPTION DETECTED, DROPPING PACKET----------------" << 
+									endl << endl;
 							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
-								cout << "Current seqNum" << Packet.seqNum << endl;
+								if (DEBUG) {
+									cout << "Current seqNum" << Packet.seqNum << endl;
+								}
 								if (exp_pktNum == Packet.seqNum) {
 									//writing data
 									newfile.write(Packet.payload, bytes_received - headSize);
@@ -175,6 +180,9 @@ int main(int argc, char* argv[])
                                 {
                                     cout << "sending ACK" << Packet.ackNum << endl << endl;
                                 }
+								
+								cout << "FILE DATA PACKET PROCESSED" << 
+									"--------------------------------" << endl << endl;
 							}
 						}  
 					}
