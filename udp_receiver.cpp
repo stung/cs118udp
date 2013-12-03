@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
 	int exp_pktNum = 0;
 	int pkt_ackNum = -1;
 	int status = 0;
-	unsigned int ACKNumB = 0;
+	int ACKNumB = 0;
 
 	if (udpsend(fd, (void*)&Packet, strlen(filename) + headSize, 0, 
 		  (struct sockaddr*)&serv_addr, slen, 0, 0) != -1)
@@ -114,7 +114,9 @@ int main(int argc, char* argv[])
 				return 0;
 			} else {
 				int maxSeqNum = Packet.maxSeqNum;
-				cout << "Max Seq Num is: " << maxSeqNum << endl;	
+				if (DEBUG) {
+					cout << "Max Seq Num is: " << maxSeqNum << endl;	
+				}
 				cout << "Creating file" << endl;
 
 				string received_file = filename;
@@ -135,6 +137,8 @@ int main(int argc, char* argv[])
                             	memset(&Packet.payload, 0, sizeof(Packet.payload));
                             	Packet.seqNum = -2; // invalid seqNum
                             	Packet.ackNum = -2; // invalid ackNum
+								Packet.byteSeqNum = -2; // invalid seqNum
+								Packet.byteAckNum = -2; // invalid ackNum
                             	status = udpsend(fd,(void*)&Packet, headSize, 0, 
 		  								(struct sockaddr*)&serv_addr, slen, 0, 0);
                                 if (status != -1)
@@ -143,10 +147,23 @@ int main(int argc, char* argv[])
 							} else if (Packet.type == FILE_CORRUPTION) { //file corruption
 								//inform packet corruption
 								cout << "Corruption detected in packet " <<
-									Packet.seqNum << endl;
+									Packet.byteSeqNum << endl;
 								cout << "CORRUPTION DETECTED, DROPPING PACKET----------------" << 
 									endl;
 								cout << "ACKNUM IS AT BYTE " << ACKNumB << endl << endl; 
+								//send ACK 
+								Packet.type = ACK;
+								Packet.ackNum = pkt_ackNum;
+								Packet.seqNum = -2; // invalid seqNum
+								Packet.byteSeqNum = -2; // invalid seqNum
+								memset(&Packet.payload, 0, sizeof(Packet.payload));
+
+								status = udpsend(fd, (void*)&Packet, headSize, 0, 
+		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc);
+                                if (status != -1)
+                                {
+                                    cout << "sending ACK" << ACKNumB << endl << endl;
+                                }
 							} else if (Packet.type == FILE_DATA) {
 								//get the expected pkt
 								if (DEBUG) {
@@ -162,28 +179,37 @@ int main(int argc, char* argv[])
 									pkt_ackNum = pkt_ackNum % maxSeqNum;
 									exp_pktNum = exp_pktNum % maxSeqNum;
 									memset(&Packet.payload, 0, sizeof(Packet.payload));
-									cout << "Packet" << Packet.seqNum << " written, " <<
-									"expecting packet" << exp_pktNum << " next" << endl;
+									if (DEBUG) {
+										cout << "Packet" << Packet.byteSeqNum << " written, " <<
+										"expecting packet" << exp_pktNum << " next" << endl;
+									}
+									cout << "Packet" << Packet.byteSeqNum << " written!" << endl;
 									ACKNumB = Packet.byteSeqNum;
 									cout << "ACKNUM IS AT BYTE " << ACKNumB << endl << endl; 
 								} else {
 									//inform packet loss
-									cout << "Expected packet" << exp_pktNum << 
-									", packet" << Packet.seqNum << " dropped" << endl;
+									if (DEBUG) {
+										cout << "Expected packet" << exp_pktNum << 
+										", packet" << Packet.seqNum << " dropped" << endl;
+									}
+									cout << "Received packet" << Packet.byteSeqNum << 
+										", out of order!" << endl;
 									cout << "ACKNUM IS AT BYTE " << ACKNumB << endl << endl; 
 								}
 
 								//send ACK 
 								Packet.type = ACK;
 								Packet.ackNum = pkt_ackNum;
+								Packet.byteAckNum = ACKNumB;
 								Packet.seqNum = -2; // invalid seqNum
+								Packet.byteSeqNum = -2; // invalid seqNum
 								memset(&Packet.payload, 0, sizeof(Packet.payload));
 
 								status = udpsend(fd, (void*)&Packet, headSize, 0, 
 		  								(struct sockaddr*)&serv_addr, slen, Pl, Pc);
                                 if (status != -1)
                                 {
-                                    cout << "sending ACK" << Packet.ackNum << endl << endl;
+                                    cout << "sending ACK" << ACKNumB << endl << endl;
                                 }
 								
 								cout << "FILE DATA PACKET PROCESSED" << 

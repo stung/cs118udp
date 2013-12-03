@@ -35,12 +35,13 @@ struct PACKET{
 	int seqNum;
 	int ackNum;
 	int maxSeqNum;
-	unsigned int byteSeqNum;
+	int byteSeqNum;
+	int byteAckNum;
 	char payload[DATASIZE]; 
-	PACKET() : type(NONE), seqNum(-1), ackNum(-1), maxSeqNum(0), byteSeqNum(0){}
+	PACKET() : type(NONE), seqNum(-1), ackNum(-1), maxSeqNum(0), byteSeqNum(0), byteAckNum(0) {}
 };
 
-const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 3 + sizeof(unsigned int);
+const int headSize = sizeof(PACKET_TYPE) + sizeof(int) * 5;
 const int packetSize = headSize + DATASIZE;
 PACKET Packet;
 
@@ -53,19 +54,19 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 	bool isLost = (lossProb < Pl);
 
 	if (isCorr && !isLost) {
-		std::cout << "Packet seqNum" << Packet.seqNum <<
-		"/" << "ackNum" << Packet.ackNum <<
+		std::cout << "Packet seqNum" << Packet.byteSeqNum <<
+		"/" << "ackNum" << Packet.byteAckNum <<
 		" now corrupted!" << std::endl;
 		Packet.type = FILE_CORRUPTION;
 	} else if (isLost) {
-		std::cout << "Packet seqNum" << Packet.seqNum <<
-		"/" << "ackNum" << Packet.ackNum <<
+		std::cout << "Packet seqNum" << Packet.byteSeqNum <<
+		"/" << "ackNum" << Packet.byteAckNum <<
 		" lost!" << std::endl;
 		return 1;
 	} else {
 		std::cout << "Successful send Packet seqNum" <<
-		Packet.seqNum << "/" << "ackNum" << 
-		Packet.ackNum << std::endl;
+		Packet.byteSeqNum << "/" << "ackNum" << 
+		Packet.byteAckNum << std::endl;
 	} 
 	int status = sendto(sockfd, msg, len, flags, to, tolen);
 	memset(&Packet, 0, sizeof(Packet));

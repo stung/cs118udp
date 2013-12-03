@@ -106,7 +106,9 @@ int main(int argc, char* argv[])
 					int maxSeqNum = pktsPerWnd * 2;	
 
 					int * tran_DataSize = new int[maxSeqNum];
-					cout << "Max seq num is " << maxSeqNum << endl;
+					if (DEBUG) {
+						cout << "Max seq num is " << maxSeqNum << endl;
+					}
 
 					Packet.type = FILE_EXISTS;
 					char begin_msg [] = "begin to read from file";
@@ -176,6 +178,7 @@ int main(int argc, char* argv[])
 							count = fin.gcount();
 							if (count > 0) {
 								Packet.ackNum = -2; // invalid ackNum
+								Packet.byteAckNum = -2; // invalid ackNum
 								pkt_seqNum++;
 								pkt_seqNum = pkt_seqNum % maxSeqNum;
 								if (DEBUG) {
@@ -186,8 +189,10 @@ int main(int argc, char* argv[])
 								Packet.byteSeqNum = cumAckPointer;
 								udpsend(fd, (void*)&Packet, count + headSize, 0,
 				 	 				(struct sockaddr*)&cli_addr, slen, Pl, Pc);
+								if (DEBUG) {
+									cout << "Sending Pkt SeqNum" << Packet.seqNum << endl << endl;
+								}
 								cout << "Sending data amount: " << count << endl;
-								cout << "Sending Pkt SeqNum" << Packet.seqNum << endl << endl;
 								cout << "SEQNUM IS AT BYTE " << fin.tellg() << endl;
 								cout << "ExpACKNum is at byte " << cumAckPointer << endl << endl;;
 							} else {
@@ -207,7 +212,7 @@ int main(int argc, char* argv[])
 							if (Packet.type == ACK) {
 								//successfully receive the right ack, move the CW
 								if (Packet.ackNum == expect_ackNum) {
-									cout << "ACK" << expect_ackNum << " received" << endl;
+									cout << "ACK" << Packet.byteAckNum << " received" << endl;
 									if (!fin.eof()) {
 										CW_unused += tran_DataSize[Packet.ackNum];
 									}
@@ -220,9 +225,12 @@ int main(int argc, char* argv[])
 								} else if ((Packet.ackNum < (expect_ackNum + pktsPerWnd)) &&
                                             (Packet.ackNum > (expect_ackNum))) {
                                     // Looking for in-bounds ACK
-                                    cout << "ACK" << Packet.ackNum << " received," <<
-                                        " expected packet" << expect_ackNum <<
-                                        ", still within bounds" << endl << endl;
+                                    if (DEBUG) {
+	                                    cout << "ACK" << Packet.ackNum << " received," <<
+	                                        " expected packet" << expect_ackNum <<
+	                                        ", still within bounds" << endl << endl;
+                                    }
+	                                    cout << "ACK" << Packet.byteAckNum << " received" << endl << endl;
                                     if (1) { //!fin.eof()) {
                                         for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
                                             if (cumAckPointer < fsize) {
@@ -241,9 +249,12 @@ int main(int argc, char* argv[])
 	                                        ((Packet.ackNum < (expect_ackNum - pktsPerWnd)) || 
 	                                        (Packet.ackNum > (expect_ackNum + pktsPerWnd)))) {
                                     // Looking for in-bounds ACK
-                                    cout << "ACK" << Packet.ackNum << " received," <<
-                                        " expected packet" << expect_ackNum <<
-                                        ", still within bounds" << endl << endl;
+                                    if (DEBUG) {
+	                                    cout << "ACK" << Packet.ackNum << " received," <<
+	                                        " expected packet" << expect_ackNum <<
+	                                        ", still within bounds" << endl << endl;
+                                    }
+	                                    cout << "ACK" << Packet.byteAckNum << " received" << endl << endl;
                                     if (1) { //!fin.eof()) {
                                         if (Packet.ackNum < (expect_ackNum - pktsPerWnd)) {
                                             for (int i = expect_ackNum; i < maxSeqNum; i++) {
@@ -280,14 +291,18 @@ int main(int argc, char* argv[])
                                 } else {
 									// drops all ACKs outside of bounds,
 									// even if receiver is "buffered" by cumAck
-									cout << "Expected ACK" << expect_ackNum << 
-										", received ACK" << Packet.ackNum << 
-										", out of bounds" << endl << endl;									
+									if (DEBUG) {
+										cout << "Expected ACK" << expect_ackNum << 
+											", received ACK" << Packet.ackNum << 
+											", out of bounds" << endl << endl;	
+									}
+										cout << "Received ACK" << Packet.byteAckNum << 
+											", out of bounds" << endl << endl;	
 								}
 								cout << "ACK PACKET PROCESSED--------------------------------" <<
 									endl << endl;
 							} else if (Packet.type == FILE_CORRUPTION) {
-								cout << "Packet ACKNum" << Packet.ackNum << 
+								cout << "Packet ACKNum" << Packet.byteAckNum << 
 								" is corrupted!" << endl;
 								cout << "CORRUPTION DETECTED, DROPPING PACKET----------------" << 
 									endl << endl;
@@ -309,7 +324,9 @@ int main(int argc, char* argv[])
 							CW_unused = CWnd;
 							
 							//reset the seqNum
-							cout << "Resetting the SEQnum to: " << expect_ackNum << endl;
+							if (DEBUG) {
+								cout << "Resetting the SEQnum to: " << expect_ackNum << endl;
+							}
 							pkt_seqNum = expect_ackNum;
 							
 							//modify the file pointer to the send_base
@@ -350,6 +367,8 @@ int main(int argc, char* argv[])
 
 						Packet.seqNum = -2; // invalid seqNum
 						Packet.ackNum = -2; // invalid ackNum
+						Packet.byteSeqNum = -2; // invalid seqNum
+						Packet.byteAckNum = -2; // invalid ackNum
 						sock_status = udpsend(fd, (void*)&Packet, strlen(msg) + headSize,
 							 			0, (struct sockaddr*)&cli_addr, slen, Pl, Pc);
 						cout << "Waiting for transfer complete ACK" << endl;
@@ -363,8 +382,10 @@ int main(int argc, char* argv[])
 										&slen, Pl, Pc);
 								if (bytes_received != -1) {
 
-									cout << "Packet" << Packet.seqNum << " received" << endl;
-									cout << "Packet type is " << Packet.type << endl;
+									if (DEBUG) {
+										cout << "Packet" << Packet.seqNum << " received" << endl;
+										cout << "Packet type is " << Packet.type << endl;
+									}
 									//file transfer complete
 									if (Packet.type == TRANSFER_COMPLETE_ACK)
 									{
