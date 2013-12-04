@@ -97,6 +97,7 @@ int main(int argc, char* argv[])
 					int CW_unused = CWnd;
 					int expect_ackNum = 0;
 					int pkt_seqNum = 0;
+					int pkt_byteSeqNum = 0;
 					streampos cumAckPointer;
 
 					// determine the max number of seq #s
@@ -164,7 +165,13 @@ int main(int argc, char* argv[])
 							memset(&Packet.payload, 0, sizeof(Packet.payload));
 							Packet.type = FILE_DATA;
 							Packet.seqNum = pkt_seqNum;
-
+							if (fin.tellg() != -1) {
+								pkt_byteSeqNum = fin.tellg();
+								Packet.byteSeqNum = pkt_byteSeqNum;
+							} else {
+								pkt_byteSeqNum = fsize;
+								Packet.byteSeqNum = pkt_byteSeqNum;
+							}
 							if ( CW_unused < DATASIZE )
 							{
 								fin.read(Packet.payload, tran_DataSize[Packet.seqNum]);
@@ -188,20 +195,25 @@ int main(int argc, char* argv[])
 								Packet.byteAckNum = -2; // invalid ackNum
 								pkt_seqNum++;
 								pkt_seqNum = pkt_seqNum % maxSeqNum;
+
 								if (DEBUG) {
 									cout << "Write Payload is: -------------------" <<
 									"-----------------------" << endl << Packet.payload << 
 									endl << "-------------------------------------------------" << endl;
 								}
-								Packet.byteSeqNum = cumAckPointer;
 								udpsend(fd, (void*)&Packet, count + headSize, 0,
 				 	 				(struct sockaddr*)&cli_addr, slen, Pl, Pc);
 								if (DEBUG) {
 									cout << "Sending Pkt SeqNum" << Packet.seqNum << endl << endl;
 								}
 								cout << "Sending data amount: " << count << endl;
-								cout << "SEQNUM IS AT BYTE " << fin.tellg() << endl;
+								cout << "SEQNUM IS AT BYTE " << pkt_byteSeqNum << endl;
 								cout << "ExpACKNum is at byte " << cumAckPointer << endl << endl;;
+								if (fin.tellg() != -1) {
+									pkt_byteSeqNum = fin.tellg();
+								} else {
+									pkt_byteSeqNum = fsize;
+								}
 							} else {
 								cout << "No more characters to read in the file" << endl << endl;
 							}
@@ -237,7 +249,7 @@ int main(int argc, char* argv[])
 	                                        " expected packet" << expect_ackNum <<
 	                                        ", still within bounds" << endl << endl;
                                     }
-	                                    cout << "ACK" << Packet.byteAckNum << " received" << endl << endl;
+                                    cout << "ACK" << Packet.byteAckNum << " received" << endl << endl;
                                     if (cumAckPointer < fsize) {
                                         for (int i = expect_ackNum; i <= Packet.ackNum; i++) {
                                             if (cumAckPointer < fsize) {
@@ -321,7 +333,7 @@ int main(int argc, char* argv[])
 								" is corrupted!" << endl;
 								cout << "CORRUPTION DETECTED, DROPPING PACKET----------------" << 
 									endl << endl;
-								cout << "SEQNUM IS AT BYTE " << fin.tellg() << endl;
+								cout << "SEQNUM IS AT BYTE " << pkt_byteSeqNum << endl;
 								cout << "ExpACKNum is at byte " << cumAckPointer << endl << endl;;
 							}
 							
@@ -343,6 +355,7 @@ int main(int argc, char* argv[])
 								cout << "Resetting the SEQnum to: " << expect_ackNum << endl;
 							}
 							pkt_seqNum = expect_ackNum;
+							pkt_byteSeqNum = cumAckPointer;
 							
 							//modify the file pointer to the send_base
 							if (fin.eof()) {
@@ -358,7 +371,7 @@ int main(int argc, char* argv[])
 								cout << "ACKRstFile pointer is " << fin.tellg() << endl << endl;
 							}
 						}
-						cout << "SEQNUM IS AT BYTE " << fin.tellg() << endl;
+						cout << "NEXT SEQNUM IS AT BYTE " << pkt_byteSeqNum << endl;
 						cout << "ExpACKNum is at byte " << cumAckPointer << endl << endl;;
 					}
 

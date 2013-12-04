@@ -57,6 +57,8 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 		if ((Packet.seqNum == -2) && (Packet.ackNum != -2)) {
 			std::cout << "Packet ackNum" << Packet.ackNum <<
 				" now corrupted!" << std::endl;
+			std::cout << "Packet ackNum" << Packet.byteAckNum <<
+				" now corrupted!" << std::endl;
 		} else if ((Packet.seqNum != -2) && (Packet.ackNum == -2)) {
 			std::cout << "Packet seqNum" << Packet.byteSeqNum <<
 				" now corrupted!" << std::endl;
@@ -68,6 +70,8 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 	} else if (isLost) {
 		if ((Packet.seqNum == -2) && (Packet.ackNum != -2)) {
 			std::cout << "Packet ackNum" << Packet.ackNum <<
+				" now lost!" << std::endl;
+			std::cout << "Packet ackNum" << Packet.byteAckNum <<
 				" now lost!" << std::endl;
 		} else if ((Packet.seqNum != -2) && (Packet.ackNum == -2)) {
 			std::cout << "Packet seqNum" << Packet.byteSeqNum <<
@@ -81,6 +85,8 @@ int udpsend(int sockfd, const void *msg, int len, unsigned int flags,
 		if ((Packet.seqNum == -2) && (Packet.ackNum != -2)) {
 			std::cout << "Successfully sent Packet ackNum" <<
 				Packet.ackNum << std::endl;
+			std::cout << "Successfully sent Packet ackNum" <<
+				Packet.byteAckNum << std::endl;
 		} else if ((Packet.seqNum != -2) && (Packet.ackNum == -2)) {
 			std::cout << "Successfully sent Packet seqNum" <<
 				Packet.byteSeqNum << std::endl;
