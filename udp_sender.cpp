@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "packet.h"
 #define BUFLEN 512
+#define MAXRETX 500
 #define DEBUG 0
 using namespace std;
 
@@ -98,6 +99,7 @@ int main(int argc, char* argv[])
 					int expect_ackNum = 0;
 					int pkt_seqNum = 0;
 					int pkt_byteSeqNum = 0;
+					int numReTX = 0;
 					streampos cumAckPointer;
 
 					// determine the max number of seq #s
@@ -239,6 +241,7 @@ int main(int argc, char* argv[])
 									expect_ackNum = expect_ackNum % maxSeqNum;
 									cumAckPointer += tran_DataSize[Packet.ackNum];
 									timeout.tv_usec = 20000;
+                                    numReTX = 0;
 									// restart the timer
 									// continue;
 								} else if ((Packet.ackNum < (expect_ackNum + pktsPerWnd)) &&
@@ -266,6 +269,7 @@ int main(int argc, char* argv[])
                                     expect_ackNum++;
                                     expect_ackNum = expect_ackNum % maxSeqNum;
                                     timeout.tv_usec = 20000;
+                                    numReTX = 0;
                                 } else if ((expect_ackNum > pktsPerWnd) &&
 	                                        ((Packet.ackNum < (expect_ackNum - pktsPerWnd)) || 
 	                                        (Packet.ackNum > (expect_ackNum + pktsPerWnd)))) {
@@ -315,6 +319,7 @@ int main(int argc, char* argv[])
                                     expect_ackNum++;
                                     expect_ackNum = expect_ackNum % maxSeqNum;
                                     timeout.tv_usec = 20000;
+                                    numReTX = 0;
                                 } else {
 									// drops all ACKs outside of bounds,
 									// even if receiver is "buffered" by cumAck
@@ -345,7 +350,22 @@ int main(int argc, char* argv[])
 						} else {
 							cout << "****************" << 
 								"Sender timed out!****************" << endl;
-	
+							if (numReTX < MAXRETX) {
+								numReTX++;
+								if (DEBUG) {
+									cout << "Current number of consecutive timeouts: " <<
+										numReTX << endl;
+								}
+							} else {
+								cout << "CONNECTION TOO UNSTABLE" << endl;
+								cout << "ABORTING FILE TRANSFER" << endl;
+								cout << "-------------------------------------------" << endl;
+								Packet.type = TRANSFER_ABORT;
+								udpsend(fd, (void*)&Packet, headSize,
+							 			0, (struct sockaddr*)&cli_addr, slen, 0, 0);
+								return 0;
+							}
+
 							/*reset the CW_unused to retransmit all packets
 							* since the first unacked packet*/
 							CW_unused = CWnd;

@@ -214,6 +214,11 @@ int main(int argc, char* argv[])
 								
 								cout << "FILE DATA PACKET PROCESSED" << 
 									"--------------------------------" << endl << endl;
+							} else if (Packet.type == TRANSFER_ABORT) {
+								cout << "CONNECTION TOO UNSTABLE" << endl;
+								cout << "FILE TRANSFER ABORTED" << endl;
+								cout << "-------------------------------------------" << endl;
+								return 0;
 							}
 						}  
 					}
